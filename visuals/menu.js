@@ -89,23 +89,14 @@ var menu = {
   
   select: function(){
     switch($('#menu .selected').text().toLowerCase()){
-      case 'br1ght pr1mate':
-        menu.gameSelection = BrightPrimate;
+      case 'dj cutman':
+        window.location = window.location.href.replace('index.html', '')+'visuals/djcutman/index.html';
         break;
-      case 'minusbaby':
-        menu.gameSelection = MinusBaby;
+      case 'a-rival':
+        window.location = window.location.href.replace('index.html', '')+'visuals/arival/index.html';
         break;
-      case 'together we are robots':
-        window.location = window.location.href.replace('index.html', '')+'visuals/togetherwearerobots/index.html';
-        break;
-      case 'doctor popular':
-        window.location = window.location.href.replace('index.html', '')+'visuals/doctorpopular/index.html';
-        break;
-      case 'space town savior':
-        window.location = window.location.href.replace('index.html', '')+'visuals/doctorpopular/index.html';
-        break;
-      case 'decktonic':
-        window.location = window.location.href.replace('index.html', '')+'visuals/_steve.html';
+      case 'e.n.cowell':
+        window.location = window.location.href.replace('index.html', '')+'visuals/encowell/index.html';
         break;
       default:
         return;
