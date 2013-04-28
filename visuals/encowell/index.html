@@ -60,6 +60,7 @@
 	<script src="../../js/stats.min.js"></script>
 	<script src="../../js/gamepad.js"></script>
 	<script src="../../js/jquery.min.js"></script>
+	<script src="../../js/jquery.hotkeys.js"></script>
 	<script src="EffectComposer.js"></script>
 	<script src="RenderPass.js"></script>
 	<script src="ShaderPass.js"></script>
@@ -381,6 +382,12 @@
               break;
           }
         });
+        
+        $(document).bind('keydown', '1', function(){$('#bandname').toggle();});
+        $(document).bind('keydown', 's', function(){menu.next();});
+        $(document).bind('keydown', 'up', function(){video.playback += .5});
+        $(document).bind('keydown', 'down', function(){menu.next();});
+        $(document).bind('keydown', 'return', function(){menu.select();});
 
 			}
 

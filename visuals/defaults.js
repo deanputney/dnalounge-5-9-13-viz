@@ -6,6 +6,7 @@ var COLORSETS = {
   CMY: new Array('#FFE328', '#FF0E9B', '#20BECC'),
   CMYK: new Array(''),
   WHITE: new Array('#fff'),
+  DISNEYCASTLE: new Array('#123cc1', '#1168d9', '#117cd9', '#0d9fd9', '#0fc9f2'),
 };
     
 COLORSETS.GREYSCALE = new Array();
