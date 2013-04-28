@@ -1,0 +1,123 @@
+<html>
+  <head>
+    <script type="text/javascript" src="js/gamepad.js"></script>
+    <script type="text/javascript" src="js/tester.js"></script>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="js/stats.min.js"></script>
+    <script type="text/javascript" src="js/colors.min.js"></script>
+    
+    <script type="text/javascript" src="three.js/build/three.min.js"></script>
+    <script type="text/javascript" src="three.js/examples/js/postprocessing/DotScreenPass.js"></script>
+    <script type="text/javascript" src="three.js/examples/js/postprocessing/DotScreenPass.js"></script>
+    <script src="three.js/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="three.js/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="three.js/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="three.js/examples/js/postprocessing/MaskPass.js"></script> 
+    <script src="three.js/examples/js/postprocessing/BloomPass.js"></script> 
+    <script src="three.js/examples/js/shaders/CopyShader.js"></script>
+
+    <script src="three.js/examples/js/shaders/BleachBypassShader.js"></script>
+    <script src="three.js/examples/js/shaders/ColorifyShader.js"></script>
+    <script src="three.js/examples/js/shaders/DotScreenShader.js"></script>
+    <script src="three.js/examples/js/shaders/BrightnessContrastShader.js"></script>
+    <script src="three.js/examples/js/shaders/ColorCorrectionShader.js"></script>
+    <script src="three.js/examples/js/shaders/ConvolutionShader.js"></script>
+    <script src="three.js/examples/js/shaders/FilmShader.js"></script>
+  
+    <script src="three.js/examples/js/shaders/FocusShader.js"></script>
+    <script src="three.js/examples/js/shaders/HorizontalBlurShader.js"></script>
+    <script src="three.js/examples/js/shaders/HueSaturationShader.js"></script>
+    <script src="three.js/examples/js/shaders/KaleidoShader.js"></script>
+    <script src="three.js/examples/js/shaders/LuminosityShader.js"></script>
+    <script src="three.js/examples/js/shaders/MirrorShader.js"></script>
+    <script src="three.js/examples/js/shaders/RGBShiftShader.js"></script>
+    <script src="three.js/examples/js/shaders/SepiaShader.js"></script>
+    <script src="three.js/examples/js/shaders/VerticalBlurShader.js"></script>
+    <script src="three.js/examples/js/shaders/VignetteShader.js"></script>
+    
+    
+    <script type="text/javascript" src="visuals/defaults.js"></script>
+    <script type="text/javascript" src="visuals/menu.js"></script>
+    <script type="text/javascript" src="visuals/minusbaby.js"></script>
+    <script type="text/javascript" src="visuals/brightprimate.js"></script>
+    <script type="text/javascript" src="visuals/doctorpopular.js"></script>
+    <script type="text/javascript" src="visuals/decktonic.js"></script>
+    <script type="text/javascript" src="visuals/togetherwearerobots.js"></script>
+    
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+  </head>
+  <body>
+
+    <div id="support-dialog">
+      <div id='no-gamepad-support'>
+      Your browser does not seem to support Gamepad API, or it might be
+      we’re not detecting it very well. Sorry!
+      </div>
+      <div id='no-gamepads-connected'>
+      No gamepads seem to be connected. Be sure to plug in a gamepad and then
+      press any of its buttons to activate it.
+      </div>
+    </div>
+    
+    <div id="debug">
+      
+    </div>
+    
+    <div id="menu">
+      <ul>
+        <li><span class="selected">minusbaby</span></li>
+        <li><span>BR1GHT PR1MATE</span></li>
+        <li><span>Together We Are Robots</span></li>
+        <li><span>Doctor Popular</span></li>
+        <li><span>Space Town Savior</span></li>
+        <li><span>Decktonic</span></li>
+      </ul>
+    </div>
+    
+		<video id="video" autoplay loop style="display:none">
+			<source src="visuals/doctorpopular/defenestration.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+		</video>
+    
+    
+    <script>
+      if(window!==top){
+        document.body.classList.add('iframe');
+      }
+      // document.querySelector('#mode-visual').addEventListener('click',tester.updateMode,false);
+      // document.querySelector('#mode-raw').addEventListener('click',tester.updateMode,false);
+      // tester.init();
+      // gamepadSupport.init();
+      var gamepad = new Gamepad();
+      $(document).ready(function(){
+                
+        if (!gamepad.init()) {
+          alert('Your browser does not support gamepads, get the latest Google Chrome or Firefox.');
+        }
+        
+        game = null;
+        menu.init();
+                
+       /* var stats = new Stats();
+        stats.setMode(0); // 0: fps, 1: ms
+
+        // Align top-left
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.left = '0px';
+        stats.domElement.style.top = '0px';
+
+        document.body.appendChild( stats.domElement );
+
+        setInterval( function () {
+
+            stats.begin();
+
+            // your code goes here
+
+            stats.end();
+
+        }, 1000 / 60 ); */
+      });
+    </script>
+  </body>
+</html>
