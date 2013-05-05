@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title></title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+    	<script type="text/javascript" src="../js/jquery.min.js"></script>
+    	<script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
+    	<script type="text/javascript" src="../js/gamepad.js"></script>
+		<script src="../js/three.min.js"></script>
+		<script src="../three.js/examples/js/Detector.js"></script>
+
+		<script>
+			COLORSETS = {}
+  			COLORSETS.RAINBOWBRITE = new Array('#71c8bf', '#1ba554', '#cad93b', '#fef02f', '#fbb62c', '#f38a2e', '#ee592c', '#ea1d2b', '#b42767', '#65328f', '#52529f', '#20aeda')
+
+			if ( ! Detector.webgl ) { Detector.addGetWebGLMessage(); }
+
+			var container;
+			var camera, scene, renderer;
+
+			cube = { 
+					name: "cube", 
+					create: function () { return new THREE.CubeGeometry( 100, 100, 100, 1, 1, 1 ) },
+					isWireframe: false
+				}
+						
+			function setupObjects() 
+			{
+				var max = 1200
+				var i = 1
+				sceneObjects = []
+				
+				for (var x = -max; x < max; x += 100)
+				{
+					i = i + 1
+					for (var z = -max; z < max; z += 100)
+					{
+						i = i + 1
+						var useObj = cube //objects[sceneObjectType]
+						var color = COLORSETS.RAINBOWBRITE[i % COLORSETS.RAINBOWBRITE.length]
+						//color = "#fff"
+						mainMaterial = new THREE.MeshLambertMaterial( {  
+							ambient: 0xffffff, 
+							color: color, 
+							wireframe: useObj.isWireframe, 
+							transparent: false, 
+							opacity: .1, 
+							side: THREE.DoubleSide 
+						} ),
+						
+						materials = [
+							//new THREE.MeshBasicMaterial( { color: COLORSETS.RAINBOWBRITE[0], 
+							// wireframe: false, wireframeLinewidth: 1, overdraw: true } )
+							//new THREE.MeshLambertMaterial( { ambient: 0xbbbbbb, map: map, side: THREE.DoubleSide } ),
+							//	ambient: 0xbbbbbb, 
+
+							mainMaterial
+						];
+						//objNum = i % objects.length
+						object = THREE.SceneUtils.createMultiMaterialObject( useObj.create(), materials );
+						object.position.set( -x, 0, z );
+						
+						object.castShadow = true;
+						object.receiveShadow = false;
+
+						scene.add( object );
+						sceneObjects.push(object)
+					}
+				}				
+			}
+			
+			function init() 
+			{
+				container = document.createElement('div');
+				document.body.appendChild(container);
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 20000 );
+				camera.position.y = 400;
+
+				scene = new THREE.Scene();
+
+				var light, object, object2, materials;
+
+				light = new THREE.DirectionalLight( 0xffffff );
+				//light = new THREE.PointLight( 0xffffff );
+				light.position.set( 0, 2000, 1000 ).normalize();
+				light.castShadow = true;
+				light.shadowCameraRight     =  5;
+				light.shadowCameraLeft     = -5;
+				light.shadowCameraTop      =  5;
+				light.shadowCameraBottom   = -5;
+				light.shadowCameraVisible = true;
+
+				scene.add( light );
+				
+				/*
+				light = new THREE.DirectionalLight( 0xffffff );
+				light.position.set( 100, 100, .5 );
+				scene.add( light );
+				*/
+				mainLight = light
+				setupObjects()
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+
+				renderer.shadowMapEnabled = true;
+				renderer.shadowMapSoft = true;
+
+				renderer.shadowCameraNear = 3;
+				renderer.shadowCameraFar = camera.far;
+				renderer.shadowCameraFov = 50;
+
+				renderer.shadowMapBias = 0.0039;
+				renderer.shadowMapDarkness = 0.5;
+				renderer.shadowMapWidth = 1024;
+				renderer.shadowMapHeight = 1024;
+
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				setupBindings()
+			}
+
+			function onWindowResize() 
+			{
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function animate() 
+			{
+				requestAnimationFrame( animate );
+				render();
+			}
+
+			var rotXV = 0
+			var rotYV = 0
+			var rotZV = 0
+			var objectScale = 1
+			var stopRotXV = false
+			var stopRotYV =  false
+			var rotPlane =  false
+			var timeCount = 0
+			
+			function render() 
+			{
+				var rate = 0.0001
+				timeCount = timeCount + rate
+				var timer = timeCount*20 //Date.now() * rate;
+
+				camera.position.x = 0 // Math.cos( timeCount *30) * 800;
+				//camera.position.y = 2000
+				//if (rotPlane) { camera.position.y = Math.sin( timeCount *30 ) * 800; }
+				camera.position.y =  1800 // Math.sin( timeCount *300 ) * 1300;
+				camera.position.z = Math.sin( timeCount *30) * 800;
+				//camera.rotation.y += .1 // Math.sin( timeCount *30) * 800;
+
+				camera.lookAt( scene.position );
+				
+				for ( var i = 0, l = scene.children.length; i < l; i ++ ) 
+				{
+					var object = scene.children[ i ];
+					
+					if (object.speed == null)
+					{
+						//object.speed = (1 + Math.sin( i/100 + timeCount *30))*.01
+					}
+					//object.scale.y += object.speed
+					//object.scale.y +=  (1 + Math.sin( i/2 + timeCount *30))*.01
+					//object.scale.y =  4*(1 + Math.sin( i/2 + timeCount *600))
+					//object.rotation.z += .01
+					
+					var dx = object.position.x
+					var dz = object.position.z
+					var r = Math.sqrt(dx*dx + dz*dz)
+					if (r == 0)
+					{
+						object.scale.y =  10*(1 + Math.sin( r/100 + timeCount *600))
+						//object.scale.y +=  1*(1 + Math.sin( i + timeCount *1600))
+						//object.position.y = -object.scale.y
+						//object.position.y += 1
+						//object.position.set( 0, 0, 0 ); //Math.sin( timeCount *30)*10
+						//object.overdraw = true
+					}
+				}
+				renderer.render( scene, camera );
+			}
+			
+			function removeObjects()
+			{
+				for (var i = 0; i < sceneObjects.length; i++) 
+				{
+					scene.remove( sceneObjects[i] );	
+				}		
+				sceneObjects = []
+			}
+
+			/*
+			function toggleWireframe()
+			{
+				for (var i = 0; i < sceneObjects.length; i++) 
+				{
+					sceneObjects[i].materials[0].wireframe = true //!sceneObjects[i].material.wireframe
+				}		
+			}
+			
+			function setObjectsScale(scale)
+			{
+				for (var i = 0; i < sceneObjects.length; i++) 
+				{
+					if (typeof(scale) == "number")
+					{
+						sceneObjects[i].scale.x = scale
+						sceneObjects[i].scale.y = scale
+						sceneObjects[i].scale.z = scale
+						objectScale = scale
+					}
+					else
+					{
+						sceneObjects[i].scale.x = scale.x
+						sceneObjects[i].scale.y = scale.y
+						sceneObjects[i].scale.z = scale.z
+					}
+				}		
+			}
+			
+			function updateColors()
+			{
+				for (var i = 0; i < sceneObjects.length; i++) 
+				{
+					var color = COLORSETS.RAINBOWBRITE[(i*4) % COLORSETS.RAINBOWBRITE.length]
+					sceneObjects[i].material.color = color
+				}		
+			}
+			*/
+			
+			function setupBindings()
+			{
+				lastObjectScale = null
+			    $(document).bind('keydown', 'p', function(e) {
+					if (lastObjectScale == null) 
+					{ 
+						lastObjectScale = objectScale 
+						objectScale *= 1.1
+					//	setObjectsScale(objectScale)
+					}
+				}); 
+
+			    $(document).bind('keyup', 'p', function(e) { 
+				//	setObjectsScale(lastObjectScale)
+					lastObjectScale = null
+				}); 
+				
+			    $(document).bind('keydown', 'o', function(e) { 
+					setObjectsScale(4)
+				}); 
+				
+			    $(document).bind('keydown', 'i', function(e) { 
+					setObjectsScale(2.83)
+				}); 
+				
+			    $(document).bind('keydown', 'u', function(e) { 
+					setObjectsScale(2)
+				}); 
+
+			    $(document).bind('keydown', 'u', function(e) { 
+					setObjectsScale(1)
+				}); 
+
+			    $(document).bind('keydown', 'y', function(e) { 
+					setObjectsScale(.5)
+				//	setObjectsScale({x: 1, y: 5, z:1 })
+				}); 
+			
+			    $(document).bind('keydown', 'a', function(e){ rotYV = 1 ;  }); 
+			    $(document).bind('keydown', 's', function(e){ rotYV = 0; stopRotYV = true;   }); 
+			    $(document).bind('keydown', 'd', function(e){ rotYV = -1;  });
+			
+			    $(document).bind('keydown', 'q', function(e){ rotXV = 1;  }); 
+			    $(document).bind('keydown', 'w', function(e){ rotXV = 0; stopRotXV = true; }); 
+			    $(document).bind('keydown', 'e', function(e){ rotXV = -1;  }); // x spin
+			
+			    $(document).bind('keydown', 'z', function(e){ rotZV = 1 })
+			    $(document).bind('keydown', 'x', function(e){ rotZV = 0 })
+			    $(document).bind('keydown', 'c', function(e){ rotZV = -1 })
+			    $(document).bind('keydown', 'b', function(e){ rotPlane = !rotPlane })
+				
+			    $(document).bind('keydown', 'm', function(e){ 
+					//updateColors()
+					//isWireframe = !isWireframe
+					removeObjects(); 
+					setupObjects() 
+				})
+
+			    /* Gamepad binding */
+			
+				var global = Function('return this')() || (42, eval)('this');
+    			if (global.gamepad == null) { return }
+				
+			    console.log('binding down');
+			    gamepad.bind(Gamepad.Event.BUTTON_DOWN, function(e) {
+			      switch(e.control)
+			      {
+			        case 'Y':
+			          game.BARS.toggleWireframe();
+			          break;
+			        case 'X':
+			          game.BARS.toggleWireframe();
+			          break;
+			        case 'B':
+			          console.log('color shift');
+			          game.BARS.colorset.push(game.BARS.colorset.shift());
+			          for(var xpos = 0; xpos < 12; xpos++ )
+					  {
+			            game.BARS.objects[xpos].material =  new THREE.MeshBasicMaterial( 
+							{ 
+								color: game.BARS.colorset[xpos], 
+								wireframe: true, 
+								wireframeLinewidth: 6, 
+								overdraw: true 
+							} );
+			          }
+			          break;
+			        case 'BACK':
+			          window.location = window.location;
+			          break;
+			      }
+			    });
+		
+		/*
+			    gamepad.bind(Gamepad.Event.BUTTON_UP, function(e) {
+			      switch(e.control){
+			        case 'X':
+			          game.BARS.toggleWireframe();
+			          break;
+			        case 'RB':
+			          for(b in game.BARS.objects) {
+			            game.BARS.objects[b].rotation.x += b/game.BARS.objects.length;
+			          }
+			          break;
+			        case 'LB':
+			          for(b in game.BARS.objects) {
+			            game.BARS.objects[b].rotation.x -= b/game.BARS.objects.length;
+			          }
+			          break;
+			        case 'DPAD_UP':
+			          game.BARS.rotation.speed += 0.01;
+			          break;
+			        case 'DPAD_DOWN':
+			          game.BARS.rotation.speed -= 0.01;
+			          break;
+			        case 'DPAD_RIGHT':
+			          camera.orbit.speed += 10;
+			          break;
+			        case 'DPAD_LEFT':
+			          camera.orbit.speed -= 10;
+			          break;
+			      }
+			    });   
+			*/ 
+
+			}
+			
+			init();
+			animate();
+		</script>
+	</body>
+</html>
