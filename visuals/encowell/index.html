@@ -383,11 +383,15 @@
           }
         });
         
+        $('#bandname').toggle();
         $(document).bind('keydown', '1', function(){$('#bandname').toggle();});
         $(document).bind('keydown', 's', function(){menu.next();});
-        $(document).bind('keydown', 'up', function(){video.playback += .5});
-        $(document).bind('keydown', 'down', function(){menu.next();});
-        $(document).bind('keydown', 'return', function(){menu.select();});
+        $(document).bind('keydown', 'up', function(){video.playbackRate += .5});
+        $(document).bind('keydown', 'down', function(){video.playbackRate -= .5});
+        $(document).bind('keydown', 'shift+up', function(){video.playbackRate += .01});
+        $(document).bind('keydown', 'shift+down', function(){video.playbackRate -= .01});
+        $(document).bind('keydown', 'left', function(){video.playbackRate = video.playbackRate * -1});
+        $(document).bind('keydown', 'z', function(){video.currentTime -= 1});
 
 			}
 
