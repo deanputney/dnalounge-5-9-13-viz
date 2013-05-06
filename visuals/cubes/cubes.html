@@ -117,44 +117,49 @@
 
 						object.material.ambient = object.material.color;
 
-						//object.position.x = Math.random() * 1000 - 500;
-						//object.position.y = Math.random() * 600 - 300;
-						//object.position.z = Math.random() * 800 - 400;
-
-						object.position.x = (x- xmax/2)*100;
-						object.position.y = (y -ymax/2)*100;
-						object.position.z = 0;
-
-
-					
-						//object.rotation.x = Math.random() * 2 * Math.PI;
-						//object.rotation.y = Math.random() * 2 * Math.PI;
-						//object.rotation.z = Math.random() * 2 * Math.PI;
+						// --- current ----------------------------
 
 						var cubeSize = 2.47
-						object.scale.x = cubeSize //Math.random() * 2 + 1;
-						object.scale.y = cubeSize // Math.random() * 2 + 1;
-						object.scale.z = cubeSize //Math.random() * 2 + 1;
+
+						object.current = {}
+
+						object.current.position = {}
+						object.current.position.x = (x- xmax/2)*100;
+						object.current.position.y = (y -ymax/2)*100;
+						object.current.position.z = 0;	
+
+						object.current.scale = {}
+						object.current.scale.x = cubeSize
+						object.current.scale.y = cubeSize 
+						object.current.scale.z = cubeSize
+						
+						object.current.rotation = {}
+						object.current.rotation.x = 0
+						object.current.rotation.y = 0 
+						object.current.rotation.z = 0
+
+						// --- original ----------------------------
 
 						object.original = {}
-						object.original.position = {}
-						object.original.position.x = object.position.x
-						object.original.position.y = object.position.y
-						object.original.position.z = object.position.z
-						object.original.scale = {}
-						object.original.scale.x = object.scale.x
-						object.original.scale.y = object.scale.y
-						object.original.scale.z = object.scale.z
+						object.original.position = JSON.parse(JSON.stringify(object.current.position))
+						object.original.scale    = JSON.parse(JSON.stringify(object.current.scale))
+						object.original.rotation = JSON.parse(JSON.stringify(object.current.rotation))
+						
+						// --- target ----------------------------
+						
 						object.target = {}
-						object.target.position = {}
-						object.target.scale = {}
-
+						object.target.position = JSON.parse(JSON.stringify(object.current.position))
+						object.target.scale = JSON.parse(JSON.stringify(object.current.scale))
+						object.target.rotation = JSON.parse(JSON.stringify(object.current.rotation))
+						
+						// --- offsets ----------------------------
+						
 						object.offsets = {}
 						object.offsets.position = {}
 						object.offsets.scale = {}
 						object.offsets.rotation = {}
-						//object.offsets.rotation = {}
 
+						// ----------------------------------------
 						
 						object.castShadow = true;
 						object.receiveShadow = true;
@@ -332,7 +337,7 @@
 			{
 				zeroOffsets()
 				//updateSpread()
-				//updateSize()
+				updateSize()
 				updateNames()
 				updateWave()
 				applyOffsets()
@@ -360,15 +365,18 @@
 				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
 				{
 					var object = cubes[i];
-					object.position.x += object.offsets.position.x
-					object.position.y += object.offsets.position.y
-					object.position.z += object.offsets.position.z
-					object.scale.x += object.offsets.scale.x
-					object.scale.y += object.offsets.scale.y
-					object.scale.z += object.offsets.scale.z
-					//object.rotation.x += object.offsets.rotation.x
-					//object.rotation.y += object.offsets.rotation.y
-					//object.rotation.z +=  object.offsets.rotation.z
+					
+					object.position.x = object.current.position.x + object.offsets.position.x
+					object.position.y = object.current.position.y + object.offsets.position.y
+					object.position.z = object.current.position.z + object.offsets.position.z
+					
+					object.scale.x = object.current.scale.x + object.offsets.scale.x
+					object.scale.y = object.current.scale.y + object.offsets.scale.y
+					object.scale.z = object.current.scale.z + object.offsets.scale.z
+					
+					object.rotation.x = object.current.rotation.x + object.offsets.rotation.x
+					object.rotation.y = object.current.rotation.y + object.offsets.rotation.y
+					object.rotation.z = object.current.rotation.z + object.offsets.rotation.z
 				}
 			}
 						
@@ -383,8 +391,8 @@
 					var dx = object.position.x
 					var dz = object.position.y
 					var r = Math.sqrt(dx*dx + dz*dz)
-					//object.offsets.position.z = 50*(1.1 + Math.sin( r/100 + timeCount/20 ))
-					object.offsets.position.z = 0.01*Math.sin( r/100 + timeCount/20 ))
+					object.current.position.z = 50*(1.1 + Math.sin( r/100 + timeCount/20 ))
+					//object.offsets.position.z = 0.01*Math.sin( r/100 + timeCount/20 )
 				}
 			}
 
@@ -421,8 +429,8 @@
 			function setupGlobals()
 			{
 				timeCount = 0
-				spread = { speed: 0, value: 1 }
-				size   = { speed: 0, value: 1 }
+				spread = { speed: 0, value: 1, position: { x:1, y:1, z:1 } }
+				size   = { speed: 0, value: 1, scale: { x:1, y:1, z:1 }  }
 				names  = { choice: 0, data: [] }
 				
 				names.data = [
@@ -458,11 +466,11 @@
 				{
 					var object = cubes[i];
 					var rate = 0.02
-					object.position.x += rate*(object.target.position.x - object.position.x)
-					object.position.y += rate*(object.target.position.y - object.position.y)
-					object.scale.x += rate*(object.target.scale.x - object.scale.x)
-					object.scale.y += rate*(object.target.scale.y - object.scale.y)
-					object.scale.z += rate*(object.target.scale.z - object.scale.z)
+					object.current.position.x += rate*(object.target.position.x - object.current.position.x)
+					object.current.position.y += rate*(object.target.position.y - object.current.position.y)
+					object.current.scale.x += rate*(object.target.scale.x - object.current.scale.x)
+					object.current.scale.y += rate*(object.target.scale.y - object.current.scale.y)
+					object.current.scale.z += rate*(object.target.scale.z - object.current.scale.z)
 				}
 			}	
 				
