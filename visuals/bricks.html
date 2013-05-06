@@ -72,7 +72,7 @@
 						object.position.set( -x, 0, z );
 						
 						object.castShadow = true;
-						object.receiveShadow = false;
+						object.receiveShadow = true;
 
 						scene.add( object );
 						sceneObjects.push(object)
@@ -87,22 +87,33 @@
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 20000 );
 				camera.position.y = 400;
+        
+				camera.position.x = 0 // Math.cos( timeCount *30) * 800;
+				//camera.position.y = 2000
+				//if (rotPlane) { camera.position.y = Math.sin( timeCount *30 ) * 800; }
+				camera.position.y =  1800 // Math.sin( timeCount *300 ) * 1300;
+        camera.position.z = 5000// Math.sin( timeCount *30) * 800;
+				//camera.rotation.y += .1 // Math.sin( timeCount *30) * 800;
 
 				scene = new THREE.Scene();
 
-				var light, object, object2, materials;
+				var object, object2, materials;
 
 				light = new THREE.DirectionalLight( 0xffffff );
 				//light = new THREE.PointLight( 0xffffff );
-				light.position.set( 0, 2000, 1000 ).normalize();
+				light.position.set( 1000, 2000, -1000 ).normalize();
 				light.castShadow = true;
-				light.shadowCameraRight     =  5;
-				light.shadowCameraLeft     = -5;
-				light.shadowCameraTop      =  5;
-				light.shadowCameraBottom   = -5;
+				light.shadowCameraRight     =  1000;
+				light.shadowCameraLeft     = -1000;
+				light.shadowCameraTop      =  1000;
+				light.shadowCameraBottom   = -1000;
 				light.shadowCameraVisible = true;
+        light.shadowDarkness = 1;
+        light.shadowCameraVisible = true;
 
 				scene.add( light );
+        
+        // scene.add( new THREE.AmbientLight( 0x212223) );
 				
 				/*
 				light = new THREE.DirectionalLight( 0xffffff );
@@ -163,14 +174,10 @@
 				timeCount = timeCount + rate
 				var timer = timeCount*20 //Date.now() * rate;
 
-				camera.position.x = 0 // Math.cos( timeCount *30) * 800;
-				//camera.position.y = 2000
-				//if (rotPlane) { camera.position.y = Math.sin( timeCount *30 ) * 800; }
-				camera.position.y =  1800 // Math.sin( timeCount *300 ) * 1300;
-				camera.position.z = Math.sin( timeCount *30) * 800;
-				//camera.rotation.y += .1 // Math.sin( timeCount *30) * 800;
-
 				camera.lookAt( scene.position );
+        light.position.x = Math.sin( timeCount *300 ) * 1300;
+        light.position.y = 2000;
+        light.position.z = 2000;
 				
 				for ( var i = 0, l = scene.children.length; i < l; i ++ ) 
 				{
