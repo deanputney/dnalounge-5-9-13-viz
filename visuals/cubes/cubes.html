@@ -131,7 +131,7 @@
 						//object.rotation.y = Math.random() * 2 * Math.PI;
 						//object.rotation.z = Math.random() * 2 * Math.PI;
 
-						var cubeSize = 2.41
+						var cubeSize = 2.47
 						object.scale.x = cubeSize //Math.random() * 2 + 1;
 						object.scale.y = cubeSize // Math.random() * 2 + 1;
 						object.scale.z = cubeSize //Math.random() * 2 + 1;
@@ -149,6 +149,7 @@
 						object.target.position = {}
 						object.target.scale = {}
 
+						object.offsets = {}
 						object.offsets.position = {}
 						object.offsets.scale = {}
 						//object.offsets.rotation = {}
@@ -307,7 +308,6 @@
 					plane.position.copy( INTERSECTED.position );
 
 					SELECTED = null;
-
 				}
 
 				container.style.cursor = 'auto';
@@ -317,7 +317,26 @@
 			function animate() 
 			{
 				requestAnimationFrame( animate );
+				doUpdates()
+				render();
+			}
 
+			function render() 
+			{
+				controls.update();
+				renderer.render( scene, camera );
+			}
+
+			function doUpdates()
+			{
+				//updateSpread()
+				//updateSize()
+				updateNames()
+				updateWave()
+			}
+			
+			function updateWave()
+			{
 				timeCount = timeCount + 1
 				
 				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
@@ -338,22 +357,6 @@
 						//object.overdraw = true
 					}
 				}
-				
-				doUpdates()
-				render();
-			}
-
-			function render() 
-			{
-				controls.update();
-				renderer.render( scene, camera );
-			}
-
-			function doUpdates()
-			{
-				updateSpread()
-				updateSize()
-				updateNames()
 			}
 
 			function updateSpread()
