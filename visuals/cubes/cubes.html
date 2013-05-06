@@ -30,6 +30,7 @@
 
 			init();
 			animate();
+			
 
 			function init() {
 
@@ -124,11 +125,7 @@
 						object.position.y = (y -ymax/2)*100;
 						object.position.z = 0;
 
-						object.original = {}
-						object.original.position = {}
-						object.original.position.x = object.position.x
-						object.original.position.y = object.position.y
-						object.original.position.z = object.position.z
+
 					
 						//object.rotation.x = Math.random() * 2 * Math.PI;
 						//object.rotation.y = Math.random() * 2 * Math.PI;
@@ -139,6 +136,19 @@
 						object.scale.y = cubeSize // Math.random() * 2 + 1;
 						object.scale.z = cubeSize //Math.random() * 2 + 1;
 
+						object.original = {}
+						object.original.position = {}
+						object.original.position.x = object.position.x
+						object.original.position.y = object.position.y
+						object.original.position.z = object.position.z
+						object.original.scale = {}
+						object.original.scale.x = object.scale.x
+						object.original.scale.y = object.scale.y
+						object.original.scale.z = object.scale.z
+						object.target = {}
+						object.target.position = {}
+						object.target.scale = {}
+						
 						object.castShadow = true;
 						object.receiveShadow = true;
 
@@ -321,7 +331,7 @@
 					}
 				}
 				
-				updateSpread()
+				doUpdates()
 				render();
 			}
 
@@ -331,54 +341,146 @@
 				renderer.render( scene, camera );
 			}
 
+			function doUpdates()
+			{
+				updateSpread()
+				updateSize()
+				updateNames()
+		
+			}
 
 			function updateSpread()
-			{
-				//if (spread.speed)
+			{					
+				spread.value += spread.speed
+				
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
 				{
-					//spread.timer -= 1
-					//spread
-					//console.log("spreadScale: " + spreadScale)
-					
-					spread.scale += spread.speed
-					//if(spread.scale < 1) { spread.scale = 1; }
-					
-					for ( var i = 0, l = cubes.length; i < l; i ++ ) 
-					{
-						var object = cubes[ i ];
-						object.position.x = object.original.position.x * spread.scale
-						object.position.y = object.original.position.y * spread.scale
-					}
-					
-					spread.speed *=.9
+					var object = cubes[ i ];
+					object.position.x = object.original.position.x * spread.value
+					object.position.y = object.original.position.y * spread.value
 				}
+				
+				spread.speed *= .9
+			}
+			
+			function updateSize()
+			{					
+				size.value += size.speed
+				
+				if (size.value < .1) { size.value = .1; }
+				
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				{
+					var object = cubes[ i ];
+					object.scale.x = object.original.scale.x * size.value
+					object.scale.y = object.original.scale.y * size.value
+				}
+				
+				size.speed *= .9
 			}
 
 			function setupGlobals()
 			{
 				timeCount = 0
-				spread = {
-					timer: 0,
-					speed: 0,
-					scale: 1	
+				spread = { speed: 0, value: 1 }
+				size   = { speed: 0, value: 1 }
+				names  = { choice: 0, data: [] }
+				
+				/*
+				names.data = [
+					[
+						[0,1,0,0,0,0,0,1,1,1,0,1,1,1,0,1,0,1,0,0,1,0,0,1,0,0],
+						[1,0,1,0,0,0,0,1,0,1,0,0,1,0,0,1,0,1,0,1,0,1,0,1,0,0],
+						[1,1,1,0,1,1,0,1,1,0,0,0,1,0,0,1,0,1,0,1,1,1,0,1,0,0],
+						[1,0,1,0,0,0,0,1,0,1,0,1,1,1,0,0,1,0,0,1,0,1,0,1,1,1]
+					],
+
+					[
+						[1,1,0,0,1,1,1,0,0,0,0,1,1,0,1,0,1,0,1,1,1,0,1,0,0,0,1,0,0,1,0,0,1,0,0,1],
+						[1,0,1,0,0,1,0,0,0,0,1,0,0,0,1,0,1,0,0,1,0,0,1,1,0,1,1,0,1,0,1,0,1,1,0,1],
+						[1,0,1,0,0,1,0,0,0,0,1,0,0,0,1,0,1,0,0,1,0,0,1,0,1,0,1,0,1,1,1,0,1,0,1,1],
+						[1,1,0,0,1,1,0,0,0,0,0,1,1,0,1,1,1,0,0,1,0,0,1,0,0,0,1,0,1,0,1,0,1,0,0,1]
+					],
+
+					[
+						[1,1,1,0,1,0,0,1,0,0,0,0,1,1,0,0,1,1,0,0,1,0,0,0,1,0,1,1,1,0,1,0,0,0,1,0,0],
+						[1,0,0,0,1,1,0,1,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0],
+						[1,1,0,0,1,0,1,1,0,0,0,1,0,0,0,1,0,0,1,0,1,0,1,0,1,0,1,1,0,0,1,0,0,0,1,0,0],
+						[1,1,1,0,1,0,0,1,0,0,0,0,1,1,0,0,1,1,0,0,0,1,0,1,0,0,1,1,1,0,1,1,1,0,1,1,1]
+					]
+				]
+				*/
+
+
+				names.data = [
+						[0,0,0,1,1,1,0,0,0],
+						[0,0,0,1,0,0,0,0,0],
+						[0,0,0,1,1,1,0,0,0],
+						[0,0,0,1,0,0,0,0,0],
+						[0,0,0,1,1,1,0,0,0]
+				]
+				selectName()
+			}
+			
+			function updateNames()
+			{
+				return
+				//selectName()
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				{
+					var object = cubes[ i ];
+					//object.position.x += (object.target.position.x - object.position.x)*.01
+					object.position.y += 0.0*(object.target.position.y - object.position.y)
 				}
+			}	
+				
+			function selectName()
+			{
+				if (names.choice != -1)
+				{
+					var objNum = 0
+					var d = names.data
+					
+					for (var y = 0; y < d.length; y ++)
+					{
+						var row = d[y]
+						for (var x = 0; x < row.length; x ++)
+						{
+							if (row[x] == 1)
+							{
+								cubes[objNum].target.position.x = x*200
+								cubes[objNum].target.position.y = y*200
+								cubes[objNum].target.position.z = 0
+								console.log("name " + objNum + " " + x + " " + y)
+								objNum ++
+							}
+							else
+							{
+								cubes[objNum].target.position.x = 10000
+								cubes[objNum].target.position.y = 10000
+								cubes[objNum].target.position.z = 10000								
+							}
+						}
+					}
+				}
+
 			}
 			
 			function setupBindings()
 			{
-			    $(document).bind('keydown', function(e) {
-					console.log("e.keyCode  = " + e.keyCode)
-					if (e.keyCode == 80)
+			    $(document).bind('keydown', function(e) 
 					{
-						spread.speed +=.05
-					}
-					if (e.keyCode == 79)
-					{
-						spread.speed -=.05
-
-					}
+						//console.log("e.keyCode  = " + e.keyCode)
+						if (e.keyCode == 80) { spread.speed +=.05 }
+						if (e.keyCode == 79) { spread.speed -=.05 }
 					
-				});
+						if (e.keyCode == 76) { size.speed +=.05 }
+						if (e.keyCode == 75) { size.speed -=.05 }	
+
+						if (e.keyCode == 77) { size.speed +=.05 }
+						if (e.keyCode == 78) { size.speed -=.05 }						
+					}
+				);
 			}
 		</script>
 		
