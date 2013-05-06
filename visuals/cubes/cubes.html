@@ -336,7 +336,7 @@
 			function doUpdates()
 			{
 				zeroOffsets()
-				//updateSpread()
+				updateSpread()
 				updateSize()
 				updateNames()
 				updateWave()
@@ -403,8 +403,8 @@
 				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
 				{
 					var object = cubes[ i ];
-					object.position.x = object.original.position.x * spread.value
-					object.position.y = object.original.position.y * spread.value
+					object.offsets.position.x = object.current.position.x * spread.value
+					object.offsets.position.y = object.current.position.y * spread.value
 				}
 				
 				spread.speed *= .9
@@ -419,8 +419,8 @@
 				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
 				{
 					var object = cubes[ i ];
-					object.scale.x = object.original.scale.x * size.value
-					object.scale.y = object.original.scale.y * size.value
+					object.offsets.scale.x = object.current.scale.x * size.value
+					object.offsets.scale.y = object.current.scale.y * size.value
 				}
 				
 				size.speed *= .9
