@@ -151,6 +151,7 @@
 						object.offsets = {}
 						object.offsets.position = {}
 						object.offsets.scale = {}
+						object.offsets.rotation = {}
 						//object.offsets.rotation = {}
 
 						
@@ -328,12 +329,48 @@
 
 			function doUpdates()
 			{
+				zeroOffsets()
 				//updateSpread()
 				//updateSize()
 				updateNames()
 				updateWave()
+				applyOffsets()
+			}
+
+			function zeroOffsets()
+			{				
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				{
+					var object = cubes[i];
+					object.offsets.position.x = 0
+					object.offsets.position.y = 0
+					object.offsets.position.z = 0
+					object.offsets.scale.x = 0
+					object.offsets.scale.y = 0
+					object.offsets.scale.z = 0
+					object.offsets.rotation.x = 0
+					object.offsets.rotation.y = 0
+					object.offsets.rotation.z = 0
+				}
 			}
 			
+			function applyOffsets()
+			{				
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				{
+					var object = cubes[i];
+					object.position.x += object.offsets.position.x
+					object.position.y += object.offsets.position.y
+					object.position.z += object.offsets.position.z
+					object.scale.x += object.offsets.scale.x
+					object.scale.y += object.offsets.scale.y
+					object.scale.z += object.offsets.scale.z
+					//object.rotation.x += object.offsets.rotation.x
+					//object.rotation.y += object.offsets.rotation.y
+					//object.rotation.z +=  object.offsets.rotation.z
+				}
+			}
+						
 			function updateWave()
 			{
 				timeCount = timeCount + 1
@@ -345,16 +382,8 @@
 					var dx = object.position.x
 					var dz = object.position.y
 					var r = Math.sqrt(dx*dx + dz*dz)
-					
-					//if (r == 0)
-					{
-						//object.position.y =  10*(1 + Math.sin( r/100 + timeCount *600))
-						object.position.z =  50*(1.1 + Math.sin( r/100 + timeCount/20 ))
-						//object.position.y = -object.scale.y
-						//object.position.y += 1
-						//object.position.set( 0, 0, 0 ); //Math.sin( timeCount *30)*10
-						//object.overdraw = true
-					}
+					//object.offsets.position.z = 50*(1.1 + Math.sin( r/100 + timeCount/20 ))
+					object.offsets.position.z = 0.01*Math.sin( r/100 + timeCount/20 ))
 				}
 			}
 
