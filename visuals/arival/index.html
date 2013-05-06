@@ -19,12 +19,23 @@
 
 		<script src="../../js/three.min.js"></script>
 		<script src="../../js/stats.min.js"></script>
+    
+		<script src="../../three.js/examples/js/shaders/ConvolutionShader.js"></script>
+		<script src="../../three.js/examples/js/shaders/CopyShader.js"></script>
+		<script src="../../three.js/examples/js/shaders/FXAAShader.js"></script>
+    
+		<script src="../../three.js/examples/js/postprocessing/EffectComposer.js"></script>
+		<script src="../../three.js/examples/js/postprocessing/MaskPass.js"></script>
+		<script src="../../three.js/examples/js/postprocessing/RenderPass.js"></script>
+		<script src="../../three.js/examples/js/postprocessing/ShaderPass.js"></script>
+		<script src="../../three.js/examples/js/postprocessing/BloomPass.js"></script>
+    
 
 		<script>
 
 			var container, stats;
 
-			var camera, scene, renderer;
+			var camera, scene, renderer, composer;
 
 			var geometry, group, timeCount;
       timeCount = 0;
@@ -77,6 +88,27 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.sortObjects = false;
+        
+        var renderModel = new THREE.RenderPass( scene, camera );
+				var effectBloom = new THREE.BloomPass( 1.03 );
+        var effectCopy = new THREE.ShaderPass( THREE.CopyShader );
+        
+        effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+        
+        var width = window.innerWidth || 2;
+        				var height = window.innerHeight || 2;
+        
+        effectFXAA.uniforms[ 'resolution' ].value.set( 1.1 / width, 1.1 / height );
+        // effectFXAA.uniforms[ 'tDiffuse' ].value.set( 0 );
+
+				effectCopy.renderToScreen = true;
+        
+        composer = new THREE.EffectComposer( renderer );
+
+        composer.addPass( renderModel );
+        composer.addPass( effectFXAA );
+				composer.addPass( effectBloom );
+        composer.addPass( effectCopy );
 
 				container.appendChild( renderer.domElement );
 
@@ -147,7 +179,8 @@
         rotateCubes();
         spreadCubes();
 
-				renderer.render( scene, camera );
+				renderer.clear();
+        composer.render();
 
 			}
       
