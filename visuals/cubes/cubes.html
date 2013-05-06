@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- saved from url=(0065)http://threejs.org/examples/webgl_interactive_draggablecubes.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>three.js webgl - draggable cubes</title>
+		<title>cubes</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -30,7 +30,6 @@
 
 			init();
 			animate();
-			
 
 			function init() {
 
@@ -148,6 +147,11 @@
 						object.target = {}
 						object.target.position = {}
 						object.target.scale = {}
+
+						object.offsets.position = {}
+						object.offsets.scale = {}
+						//object.offsets.rotation = {}
+
 						
 						object.castShadow = true;
 						object.receiveShadow = true;
@@ -160,7 +164,9 @@
 					}
 				}
 
-				plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.25, transparent: true, wireframe: true } ) );
+				plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( 
+					{ color: 0x000000, opacity: 0.25, transparent: true, wireframe: true } 
+				) );
 				plane.visible = false;
 				scene.add( plane );
 
@@ -267,6 +273,7 @@
 				var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
 				projector.unprojectVector( vector, camera );
 
+				/*
 				var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
 
 				var intersects = raycaster.intersectObjects( objects );
@@ -283,6 +290,7 @@
 					container.style.cursor = 'move';
 
 				}
+				*/
 
 			}
 
@@ -307,7 +315,6 @@
 
 			function animate() 
 			{
-
 				requestAnimationFrame( animate );
 
 				timeCount = timeCount + 1
@@ -343,10 +350,9 @@
 
 			function doUpdates()
 			{
-				updateSpread()
-				updateSize()
+				//updateSpread()
+				//updateSize()
 				updateNames()
-		
 			}
 
 			function updateSpread()
@@ -386,7 +392,6 @@
 				size   = { speed: 0, value: 1 }
 				names  = { choice: 0, data: [] }
 				
-				/*
 				names.data = [
 					[
 						[0,1,0,0,0,0,0,1,1,1,0,1,1,1,0,1,0,1,0,0,1,0,0,1,0,0],
@@ -409,60 +414,81 @@
 						[1,1,1,0,1,0,0,1,0,0,0,0,1,1,0,0,1,1,0,0,0,1,0,1,0,0,1,1,1,0,1,1,1,0,1,1,1]
 					]
 				]
-				*/
 
-
-				names.data = [
-						[0,0,0,1,1,1,0,0,0],
-						[0,0,0,1,0,0,0,0,0],
-						[0,0,0,1,1,1,0,0,0],
-						[0,0,0,1,0,0,0,0,0],
-						[0,0,0,1,1,1,0,0,0]
-				]
-				selectName()
+				selectName(-1)
 			}
 			
 			function updateNames()
 			{
-				return
 				//selectName()
 				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
 				{
-					var object = cubes[ i ];
-					//object.position.x += (object.target.position.x - object.position.x)*.01
-					object.position.y += 0.0*(object.target.position.y - object.position.y)
+					var object = cubes[i];
+					var rate = 0.02
+					object.position.x += rate*(object.target.position.x - object.position.x)
+					object.position.y += rate*(object.target.position.y - object.position.y)
+					object.scale.x += rate*(object.target.scale.x - object.scale.x)
+					object.scale.y += rate*(object.target.scale.y - object.scale.y)
+					object.scale.z += rate*(object.target.scale.z - object.scale.z)
 				}
 			}	
 				
-			function selectName()
+			function selectName(choice)
 			{
+				names.choice = choice
+				var cubesCopy = shuffleArray(cubes.slice(0));
+
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				{
+					var object = cubes[ i ];
+					object.target.position.x = object.original.position.x
+					object.target.position.y = object.original.position.y
+					object.target.position.z = object.original.position.z
+					object.target.scale.x = object.original.scale.x
+					object.target.scale.y = object.original.scale.y
+					object.target.scale.z = object.original.scale.z
+				//	object.material.opacity = 0
+				}
+
+
 				if (names.choice != -1)
 				{
 					var objNum = 0
-					var d = names.data
+					var rows = names.data[names.choice]
 					
-					for (var y = 0; y < d.length; y ++)
+					for (var y = 0; y < rows.length; y ++)
 					{
-						var row = d[y]
+						var row = rows[y]
 						for (var x = 0; x < row.length; x ++)
 						{
 							if (row[x] == 1)
 							{
-								cubes[objNum].target.position.x = x*200
-								cubes[objNum].target.position.y = y*200
-								cubes[objNum].target.position.z = 0
-								console.log("name " + objNum + " " + x + " " + y)
+								var object = cubesCopy.pop()
+								
+								object.target.position.x = (x - row.length/2)*50
+								object.target.position.y = -(y - rows.length/2)*50
+								object.target.position.z = -10
+								object.target.scale.x = 1.2
+								object.target.scale.y = 1.2
+								object.target.scale.z = 1
+								//console.log("obj " + objNum + " x" + x + " y" + y)
+								object.material.opacity = 1
 								objNum ++
-							}
-							else
-							{
-								cubes[objNum].target.position.x = 10000
-								cubes[objNum].target.position.y = 10000
-								cubes[objNum].target.position.z = 10000								
 							}
 						}
 					}
+					
+					var object = null;
+					while (object = cubesCopy.pop())
+					{
+						object.target.scale.x = 0.1
+						object.target.scale.y = 0.1
+						object.target.scale.z = 0.1
+					}
+					
 				}
+				
+
 
 			}
 			
@@ -470,18 +496,28 @@
 			{
 			    $(document).bind('keydown', function(e) 
 					{
-						//console.log("e.keyCode  = " + e.keyCode)
+						console.log("e.keyCode  = " + e.keyCode)
 						if (e.keyCode == 80) { spread.speed +=.05 }
 						if (e.keyCode == 79) { spread.speed -=.05 }
 					
 						if (e.keyCode == 76) { size.speed +=.05 }
 						if (e.keyCode == 75) { size.speed -=.05 }	
 
-						if (e.keyCode == 77) { size.speed +=.05 }
-						if (e.keyCode == 78) { size.speed -=.05 }						
+						//if (e.keyCode == 77) { names.speed +=.05 }
+						//if (e.keyCode == 78) { size.speed -=.05 }	
+											
+						if (e.keyCode == 48) { selectName(-1) }						
+						if (e.keyCode == 49) { selectName(0) }						
+						if (e.keyCode == 50) { selectName(1) }						
+						if (e.keyCode == 51) { selectName(2) }						
 					}
 				);
 			}
+			
+			function shuffleArray(o){ //v1.0
+			    for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+			    return o;
+			};
 		</script>
 		
 		<div style="cursor: pointer;">
