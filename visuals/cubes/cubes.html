@@ -18,6 +18,7 @@
 		<script src="./js/three.min.js"></script>
 		<script src="./js/TrackballControls.js"></script>
 		<script src="../../js/jquery.min.js"></script>
+		<script src="../../js/jquery.hotkeys.js"></script>
 
 		<script>
 			var container, stats;
@@ -350,8 +351,8 @@
 
 			function doUpdates()
 			{
-				//updateSpread()
-				//updateSize()
+				updateSpread()
+				updateSize()
 				updateNames()
 			}
 
@@ -494,24 +495,23 @@
 			
 			function setupBindings()
 			{
-			    $(document).bind('keydown', function(e) 
-					{
-						console.log("e.keyCode  = " + e.keyCode)
-						if (e.keyCode == 80) { spread.speed +=.05 }
-						if (e.keyCode == 79) { spread.speed -=.05 }
-					
-						if (e.keyCode == 76) { size.speed +=.05 }
-						if (e.keyCode == 75) { size.speed -=.05 }	
-
-						//if (e.keyCode == 77) { names.speed +=.05 }
-						//if (e.keyCode == 78) { size.speed -=.05 }	
-											
-						if (e.keyCode == 48) { selectName(-1) }						
-						if (e.keyCode == 49) { selectName(0) }						
-						if (e.keyCode == 50) { selectName(1) }						
-						if (e.keyCode == 51) { selectName(2) }						
-					}
-				);
+        
+        // Cube motion
+        $(document).bind('keydown', 'o', function(){spread.speed +=.05});
+        $(document).bind('keydown', 'p', function(){spread.speed -=.05});
+        $(document).bind('keydown', 'l', function(){size.speed +=.05});
+        $(document).bind('keydown', 'k', function(){size.speed -=.05});
+        
+        // Names
+        $(document).bind('keydown', 'q', function(){selectName(-1)});
+        $(document).bind('keydown', 'w', function(){selectName(0)});
+        $(document).bind('keydown', 'e', function(){selectName(1)});
+        $(document).bind('keydown', 'r', function(){selectName(2)});
+        
+        // Camera positions
+        $(document).bind('keydown', '1', function(){camera.position.set(0,0,1000); camera.rotation.x=camera.rotation.y=camera.rotation.z=0; camera.lookAt(0,0,0);});
+        
+        
 			}
 			
 			function shuffleArray(o){ //v1.0
