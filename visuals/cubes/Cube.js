@@ -1,10 +1,15 @@
 COLORSETS = {}
 COLORSETS.RAINBOWBRITE = new Array('#71c8bf', '#1ba554', '#cad93b', '#fef02f', '#fbb62c', '#f38a2e', '#ee592c', '#ea1d2b', '#b42767', '#65328f', '#52529f', '#20aeda')
 
+PI = 3.14159265359
+
 function hexToR(h) {return parseInt((cutHex(h)).substring(0,2),16)}
 function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)}
 function hexToB(h) {return parseInt((cutHex(h)).substring(4,6),16)}
 function cutHex(h) {return (h.charAt(0)=="#") ? h.substring(1,7):h}
+
+groupNumber = 0
+cubes_pulse = false
 
 Cube = Proto.clone().newSlots({
 	protoType: "Cube",
@@ -13,13 +18,16 @@ Cube = Proto.clone().newSlots({
 	mesh: null,
 	id: 0,
 	updateFuncs: null,
+	updateFunc: null,
 	cubeSize: 3,
 	scene: null,
-	owner: null
+	owner: null,
+	pulse: false,
+	bumpValue: 0,
+	pulseValue: 0,
 }).setSlots({
 	init: function()
 	{
-		var cubeSize = 2.47
 		
 		updateFuncs = []
 		
@@ -34,15 +42,17 @@ Cube = Proto.clone().newSlots({
 		this._mesh.material.ambient = this._mesh.material.color;								
 		this._mesh.castShadow = true;
 		this._mesh.receiveShadow = true;
-						
+								
+		var s = 3
 		this._current = {}
 		this._current.position = { x:0, y:0, z:0 }	
 		this._current.rotation = { x:0, y:0, z:0 }
-		this._current.scale    = { x: cubeSize, y: cubeSize, z: cubeSize}
+		this._current.scale    = { x: s, y: s, z: s}
 		this._current.color    = { r: 1, g: 1, b: 1}
 		
 		this._target = {}
 		this._target.position = JSON.parse(JSON.stringify(this._current.position))
+		this._target.position.rate = 0.02
 		this._target.rotation = JSON.parse(JSON.stringify(this._current.rotation))
 		this._target.scale    = JSON.parse(JSON.stringify(this._current.scale))
 		this._target.color    = JSON.parse(JSON.stringify(this._current.color))
@@ -62,7 +72,62 @@ Cube = Proto.clone().newSlots({
 
 	remove: function()
 	{
+		cubes.remove(this)
 		this.scene().remove(this.mesh())
+	},
+	
+	evaporate: function()
+	{
+		this.setTargetScale(0)
+		this.setUpdateFunc(this.updateToRemove)
+	},
+	
+	shrink: function()
+	{
+		if (this._target.scale.x > .8)
+		{
+			this.setTargetScale(this._target.scale.x/8)
+		}
+	},
+	
+	
+	resize: function()
+	{
+		console.log("resize")
+		
+		if (this._target.scale.x == .5)
+		{
+			this.setTargetScale(2)
+		}
+		else if (this._target.scale.x == 2)
+		{
+			this.setTargetScale(4)
+		}
+		else 
+		{
+			this.setTargetScale(.5)
+		}
+		
+		
+		
+	},
+		
+	expand: function()
+	{
+		if (this._target.scale.x < 80)
+		{
+			this.setTargetScale(this._target.scale.x*1.5)
+			//console.log("this._target.scale.x = " + this._target.scale.x)
+		}
+	},
+	
+	updateToRemove:function()
+	{
+		if (this._target.scale.x < .1)
+		{
+			this.setUpdateFunc(null)
+			//this.remove()
+		}
 	},
 
 	timeStep: function()
@@ -72,12 +137,30 @@ Cube = Proto.clone().newSlots({
 		this.updateTowardTarget()
 
 		this.update()
-
+		if (this.updateFunc())
+		{
+			this.updateFunc().apply(this)
+		}
+		
+		/*
 		for (var i = 0; i < updateFuncs.length; i++)
 		{
 			updateFuncs[i](this)
 		}
+		*/
+		if (cubes_pulse)
+		{
+			this._offsets.scale.x = .5*Math.sin(this._timeCount/10)
+			this._offsets.scale.y = .5*Math.sin(this._timeCount/10)
+			this._offsets.scale.z = .5*Math.sin(this._timeCount/10)
+		}
+		
 		this.applyOffsets()
+	},
+	
+	togglePulse: function()
+	{
+		cubes_pulse = !cubes_pulse
 	},
 
 	update: function()
@@ -100,20 +183,25 @@ Cube = Proto.clone().newSlots({
 
 	updateTowardTarget: function()
 	{
-		var rate = 0.02
+		var rate = this._target.position.rate 
 		
 		this._current.position.x += rate*(this._target.position.x - this._current.position.x)
 		this._current.position.y += rate*(this._target.position.y - this._current.position.y)
 		this._current.position.z += rate*(this._target.position.z - this._current.position.z)
 		
+		rate = 0.15
+		
 		this._current.scale.x += rate*(this._target.scale.x - this._current.scale.x)
 		this._current.scale.y += rate*(this._target.scale.y - this._current.scale.y)
 		this._current.scale.z += rate*(this._target.scale.z - this._current.scale.z)
+
+		rate = 0.15
 		
 		this._current.rotation.x += rate*(this._target.rotation.x - this._current.rotation.x)
 		this._current.rotation.y += rate*(this._target.rotation.y - this._current.rotation.y)
 		this._current.rotation.z += rate*(this._target.rotation.z - this._current.rotation.z)
 		
+		rate = 0.6
 		this._current.color.r += rate*(this._target.color.r - this._current.color.r)
 		this._current.color.g += rate*(this._target.color.g - this._current.color.g)
 		this._current.color.b += rate*(this._target.color.b - this._current.color.b)
@@ -138,7 +226,6 @@ Cube = Proto.clone().newSlots({
 		this._mesh.material.color.b = this._current.color.b //+ this._offsets.color.b
 	},
 	
-	
 	chooseRandomTargetPosition: function(max)
 	{
 		if (max == null) { max = 1000 }
@@ -147,9 +234,26 @@ Cube = Proto.clone().newSlots({
 		this._target.position.z = max*(.5 - Math.random()) 	
 	},
 	
+	shake: function(max)
+	{
+		console.log("shake")
+		if (max == null) { max = 100 }
+		this._current.position.x += max*(.5 - Math.random()) 	
+		this._current.position.y += max*(.5 - Math.random()) 	
+		this._current.position.z += max*(.5 - Math.random()) 	
+	},
+	
 	chooseRandomPaletteTargetColor: function()
 	{
-		color = COLORSETS.RAINBOWBRITE[parseInt(Math.random() * COLORSETS.RAINBOWBRITE.length)]
+		color = COLORSETS.RAINBOWBRITE[parseInt((Math.random() * COLORSETS.RAINBOWBRITE.length) % COLORSETS.RAINBOWBRITE.length)]
+		this._target.color.r = hexToR(color)/255	
+		this._target.color.g = hexToG(color)/255	
+		this._target.color.b = hexToB(color)/255
+	},
+	
+	chooseRandomGroupPaletteTargetColor: function()
+	{
+		color = COLORSETS.RAINBOWBRITE[parseInt((groupNumber * 7) % COLORSETS.RAINBOWBRITE.length)]
 		this._target.color.r = hexToR(color)/255	
 		this._target.color.g = hexToG(color)/255	
 		this._target.color.b = hexToB(color)/255
@@ -162,7 +266,19 @@ Cube = Proto.clone().newSlots({
 		this._target.color.g = max*(.5 - Math.random()) 	
 		this._target.color.b = max*(.5 - Math.random()) 	
 	},
-
+	
+	zebra: function(colors)
+	{
+		var i = (groupNumber )
+		var color = COLORSETS.RAINBOWBRITE[parseInt(i % COLORSETS.RAINBOWBRITE.length)]
+		var altColor = COLORSETS.RAINBOWBRITE[parseInt((i+8) % COLORSETS.RAINBOWBRITE.length)]
+		
+		if (Math.random() < .5) { color = altColor } 
+		this._target.color.r = hexToR(color)/255	
+		this._target.color.g = hexToG(color)/255	
+		this._target.color.b = hexToB(color)/255
+	},
+	
 	distanceFromOrigin: function()
 	{
 		var dx = this._current.position.x
@@ -180,8 +296,120 @@ Cube = Proto.clone().newSlots({
 		//this._offsets.position.z = 0.01*Math.sin( r/100 + timeCount/20 )
 	},
 	
+	minSize: function()
+	{	
+		this.setTargetScale(.1)	
+	},
+	
+	normSize: function()
+	{
+		this.setTargetScale(this.cubeSize())	
+	},
+	
+	rotZ90: function()
+	{
+		this._target.rotation.z += PI/2
+	},
+	
+	rotZReset: function()
+	{
+		this._target.rotation.z = 0	
+	},
+	
+	rotX90: function()
+	{
+		this._target.rotation.x += PI/2
+	},
+	
+	rotXReset: function()
+	{
+		this._target.rotation.x = 0	
+	},
+	
+	setTargetScale: function(s)
+	{
+		this._target.scale.x = s
+		this._target.scale.y = s
+		this._target.scale.z = s			
+	},
+	
+	setScale: function(s)
+	{
+		this._current.scale.x = s
+		this._current.scale.y = s
+		this._current.scale.z = s		
+	},
+	
+	targetScale: function()
+	{
+		return this._target.scale.x
+	},
 
+	outZ: function()
+	{
+		this._target.position.z -= 1800
+	},
+	
+	inZ: function()
+	{
+		this._target.position.z += 800
+	},
+	
+	
+	
+	outaHere: function()
+	{
+		this._target.position.rate = .2
+		console.log("outaHere")
+		this._target.position.x *= 2
+		this._target.position.y *= 2
+		this._target.position.z *= 2
+	},
+	
+	inaHere: function()
+	{
+		this._target.position.rate = .2
+		console.log("inahere")
+		this._target.position.x *= .5
+		this._target.position.y *= .5
+		this._target.position.z *= .5
+	},
 
+/*
+	bumpUpdate: function()
+	{
+		this._bumpValue *= .9
+		if (this._bumpValue == 0)
+		{
+			this.setUpdateFunc(null)
+		}
+		this.setOffsetsScale(this._pulseValue)
+	},
+	*/
+		
+	pulse: function()
+	{
+		this._pulseValue = 1
+		this.setUpdateFunc(this.pulseUpdate)
+	},
+
+	pulseUpdate: function()
+	{
+		this._pulseValue *= .9
+		if (this._pulseValue == 0)
+		{
+			this.setUpdateFunc(null)
+		}
+		this.setOffsetsScale(this._pulseValue)
+	},
+	
+	setOffsetsScale: function (s)
+	{
+		this._offsets.scale.x = s
+		this._offsets.scale.y = s
+		this._offsets.scale.z = s
+		
+	},
 	/*
 	updateSpread: function()
 	{					

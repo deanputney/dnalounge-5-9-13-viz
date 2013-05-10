@@ -53,17 +53,22 @@
 
 			var mouse = new THREE.Vector2(),
 			offset = new THREE.Vector3(), INTERSECTED, SELECTED;
+			cubeSizeIndex = 1
 
 			init();
 			animate();
-
+			
 			function init() 
 			{
+				timeStep = 0
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.z = 1000;
+				camera.position.set(0,0,1000);
+				//camera.up = new THREE.Vector3(0,0,1);
+				camera.lookAt(new THREE.Vector3(0,0,0));
 
 				controls = new THREE.TrackballControls(camera);
 				controls.rotateSpeed = 1.0;
@@ -138,9 +143,9 @@
 				var info = document.createElement( 'div' );
 				container.appendChild( info );
 
-				renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
-				renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
-				renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
+				//renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				//renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				//renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
@@ -150,8 +155,7 @@
 				{				
 					addCube()
 				}
-				arrangeInSquare()
-				arrangeInCube()
+				arrangeInCube(3)
 				
 				setupBindings()
 			}
@@ -171,10 +175,11 @@
 			function removeCube()
 			{
 				var cube = cubes.pop()
+//				cube.evaporate()
 				scene.remove(cube.mesh());
 			}
 			
-			function setCubeCount(n)
+			function setCubeCount(n, scale)
 			{
 				while (cubes.length > n)
 				{
@@ -183,7 +188,8 @@
 				
 				while (cubes.length < n)
 				{
-					addCube()
+					cube = addCube()
+					if (scale) { cube.setScale(scale) }
 				}				
 			}
 
@@ -194,7 +200,6 @@
 				{
 					addCube()
 					s = Math.sqrt(cubes.length)
-					//console.log("addCubesUntilCube cubes.length = " + cubes.length)
 				}
 			}
 			
@@ -205,16 +210,21 @@
 				{
 					addCube()
 					s = Math.pow(cubes.length, 1/3)
-					//console.log("addCubesUntilCube cubes.length = " + cubes.length)
 				}
 			}
 					
-			function arrangeInSquare(d)
+			function arrangeInSquare(size)
 			{
-				addCubesUntilSquare()
-				var max = Math.sqrt(cubes.length)
+				var scale = cubes[0].targetScale()
+				setCubeCount(size*size, scale)
+				//addCubesUntilSquare()
+				if (max == null)
+				{
+					var max = Math.sqrt(cubes.length)
+				}
 				var d = max*180
 				var i = 0
+				
 				for ( var x = 0; x < max; x ++ ) 
 				{			
 					for ( var y = 0; y < max; y ++ ) 
@@ -224,14 +234,19 @@
 						cube._target.position.x = d*(x/(max-1) -.5)
 						cube._target.position.y = d*(y/(max-1) -.5)
 						cube._target.position.z = 0
+						cube.setTargetScale(scale)
 						i ++						
 					}
 				}								
 			}
 			
-			function arrangeInCube()
+			function arrangeInCube(size)
 			{
-				setCubeCount(3*3*3)
+				//var sizes = [2*2*2, 3*3*3, 4*4*4, 5*5*5]
+				//size = sizes[cubeSizeIndex % sizes.length]
+				//cubeSizeIndex ++
+				var scale = cubes[0].targetScale()
+				setCubeCount(size*size*size, scale)
 				
 				//addCubesUntilCube()
 				
@@ -249,6 +264,7 @@
 							cube._target.position.y = d*(y/(max-1) -.5)
 							cube._target.position.z = d*(z/(max-1) -.5)
 							i ++						
+							cube.setTargetScale(scale)
 						}
 					}
 				}								
@@ -271,6 +287,7 @@
 
 				var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
 				projector.unprojectVector( vector, camera );
+				
 			}
 
 			function onDocumentMouseDown( event ) 
@@ -285,26 +302,21 @@
 			{
 				event.preventDefault();
 				controls.enabled = true;
-
-				if ( INTERSECTED ) 
-				{
-					plane.position.copy( INTERSECTED.position );
-					SELECTED = null;
-				}
-
-				container.style.cursor = 'auto';
 			}
 
 			function animate() 
 			{
 				requestAnimationFrame(animate);
 				
-				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				var cubesCopy = cubes.slice(0)
+				for ( var i = 0, l = cubesCopy.length; i < l; i ++ ) 
 				{
-					var object = cubes[i];
-					object.timeStep()
+					var cube = cubesCopy[i];
+					cube.timeStep()
 				}
-								
+				
+				timeStep ++
+				animateCamera()	
 				render();
 			}
 
@@ -327,43 +339,23 @@
 				return addCube()
 			}
 			
-			
-		function addChar(char)
-		{
-			var cubesCopy = shuffleArray(cubes.slice(0));
-			var rows = FONTS.WENDY[char]
-			var objNum = 0
-			
-			for (var y = 0; y < rows.length; y ++)
+			function removeUnownedCubes()
 			{
-				var row = rows[y]
-				for (var x = 0; x < row.length; x ++)
+				for (var i = 0; i < cubes.length; i++)
 				{
-					if (row[x] == 1)
-					{
-						var cube = cubesCopy.pop()
-					
-						cube._target.position.x = (x - row.length/2)*50
-						cube._target.position.y = -(y - rows.length/2)*50
-						cube._target.position.z = -10
-						cube._target.scale.x = 1.2
-						cube._target.scale.y = 1.2
-						cube._target.scale.z = 1
-						//object._material.opacity = 1
-						objNum ++
-					}
+					var cube = cubes[i]
+					if (cube.owner() == null) { cube.evaporate() }
+					//if (cube.owner() == null) { cube.remove() }
 				}
 			}
-		
-			var cube = null;
-			while (cube = cubesCopy.pop())
-			{
-				cube._target.scale.x = 0.1
-				cube._target.scale.y = 0.1
-				cube._target.scale.z = 0.1
-			}
-		}
+			
 	
+			function animateCamera()
+			{
+				camera.position.set(1000*Math.sin(timeStep/100), 0, 1000*Math.cos(timeStep/100));
+				//camera.up = new THREE.Vector3(0,0,1);
+				camera.lookAt(new THREE.Vector3(0,0,0));
+			}
 
 			/*			
 			function updateWave()
@@ -413,132 +405,88 @@
 			}
 			*/
 
-			/*
-			function setupGlobals()
+			word = Word.clone()
+			isTyping = false
+			
+			function applyToCubes(funcName)
 			{
-				timeCount = 0
-				spread = { speed: 0, value: 1, position: { x:1, y:1, z:1 } }
-				size   = { speed: 0, value: 1, scale: { x:1, y:1, z:1 }  }
-				names  = { choice: 0, data: [] }
-				
-				names.data = [
-					[
-						[0,1,0,0,0,0,0,1,1,1,0,1,1,1,0,1,0,1,0,0,1,0,0,1,0,0],
-						[1,0,1,0,0,0,0,1,0,1,0,0,1,0,0,1,0,1,0,1,0,1,0,1,0,0],
-						[1,1,1,0,1,1,0,1,1,0,0,0,1,0,0,1,0,1,0,1,1,1,0,1,0,0],
-						[1,0,1,0,0,0,0,1,0,1,0,1,1,1,0,0,1,0,0,1,0,1,0,1,1,1]
-					],
-
-					[
-						[1,1,0,0,1,1,1,0,0,0,0,1,1,0,1,0,1,0,1,1,1,0,1,0,0,0,1,0,0,1,0,0,1,0,0,1],
-						[1,0,1,0,0,1,0,0,0,0,1,0,0,0,1,0,1,0,0,1,0,0,1,1,0,1,1,0,1,0,1,0,1,1,0,1],
-						[1,0,1,0,0,1,0,0,0,0,1,0,0,0,1,0,1,0,0,1,0,0,1,0,1,0,1,0,1,1,1,0,1,0,1,1],
-						[1,1,0,0,1,1,0,0,0,0,0,1,1,0,1,1,1,0,0,1,0,0,1,0,0,0,1,0,1,0,1,0,1,0,0,1]
-					],
-
-					[
-						[1,1,1,0,1,0,0,1,0,0,0,0,1,1,0,0,1,1,0,0,1,0,0,0,1,0,1,1,1,0,1,0,0,0,1,0,0],
-						[1,0,0,0,1,1,0,1,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0],
-						[1,1,0,0,1,0,1,1,0,0,0,1,0,0,0,1,0,0,1,0,1,0,1,0,1,0,1,1,0,0,1,0,0,0,1,0,0],
-						[1,1,1,0,1,0,0,1,0,0,0,0,1,1,0,0,1,1,0,0,0,1,0,1,0,0,1,1,1,0,1,1,1,0,1,1,1]
-					]
-				]
-
-				selectName(-1)
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				{
+					var cube = cubes[ i ];
+					cube[funcName].apply(cube)
+				}				
 			}
 			
-			function updateNames()
-			{
-				//selectName()
-				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
-				{
-					var object = cubes[i];
-					var rate = 0.02
-					object.current.position.x += rate*(object.target.position.x - object.current.position.x)
-					object.current.position.y += rate*(object.target.position.y - object.current.position.y)
-					object.current.scale.x += rate*(object.target.scale.x - object.current.scale.x)
-					object.current.scale.y += rate*(object.target.scale.y - object.current.scale.y)
-					object.current.scale.z += rate*(object.target.scale.z - object.current.scale.z)
-				}
-			}	
-				
-			function selectName(choice)
-			{
-				names.choice = choice
-				var cubesCopy = shuffleArray(cubes.slice(0));
-
-				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
-				{
-					var object = cubes[ i ];
-					object.target.position.x = object.original.position.x
-					object.target.position.y = object.original.position.y
-					object.target.position.z = object.original.position.z
-					object.target.scale.x = object.original.scale.x
-					object.target.scale.y = object.original.scale.y
-					object.target.scale.z = object.original.scale.z
-				//	object.material.opacity = 0
-				}
-
-
-				if (names.choice != -1)
-				{
-					var objNum = 0
-					var rows = names.data[names.choice]
-					
-					for (var y = 0; y < rows.length; y ++)
-					{
-						var row = rows[y]
-						for (var x = 0; x < row.length; x ++)
-						{
-							if (row[x] == 1)
-							{
-								var object = cubesCopy.pop()
-								
-								object.target.position.x = (x - row.length/2)*50
-								object.target.position.y = -(y - rows.length/2)*50
-								object.target.position.z = -10
-								object.target.scale.x = 1.2
-								object.target.scale.y = 1.2
-								object.target.scale.z = 1
-								//console.log("obj " + objNum + " x" + x + " y" + y)
-								object.material.opacity = 1
-								objNum ++
-							}
-						}
-					}
-					
-					var object = null;
-					while (object = cubesCopy.pop())
-					{
-						object.target.scale.x = 0.1
-						object.target.scale.y = 0.1
-						object.target.scale.z = 0.1
-					}	
-				}
-			}
-			*/
 			
 			function setupBindings()
 			{
-				$(document).bind('keydown', 'b', function(){ addChar("b") });
+				$(document).bind('keydown', function(e) { 
+					var retChar = 13
+					var escChar = 27
+					var sqChar = 192
+					
+					console.log("e.keyCode = " + e.keyCode)
+					var char = String.fromCharCode(e.keyCode).toLowerCase()
 
- 		        $(document).bind('keydown', 'a', function(){ arrangeInSquare() });
- 		        $(document).bind('keydown', 's', function(){ arrangeInCube() });
-       
-		        // Cube motion
-		        $(document).bind('keydown', 'o', function(){ spread.speed +=.05 });
-		        $(document).bind('keydown', 'p', function(){ spread.speed -=.05});
-		        $(document).bind('keydown', 'l', function(){size.speed +=.05});
-		        $(document).bind('keydown', 'k', function(){size.speed -=.05});
-        
-		        // Names
-		        $(document).bind('keydown', 'q', function(){selectName(-1)});
-		        $(document).bind('keydown', 'w', function(){selectName(0)});
-		        $(document).bind('keydown', 'e', function(){selectName(1)});
-		        $(document).bind('keydown', 'r', function(){selectName(2)});
-        
+					if (e.keyCode  == sqChar)
+					{
+						removeUnownedCubes()
+					}
+					
+					if (e.keyCode == escChar)
+					{
+						if (isTyping) { word.clear() }
+						isTyping = !isTyping
+					}
+					else
+					{
+						if (isTyping)
+						{
+							if (e.keyCode == retChar)
+							{
+								word.clear()
+							}
+							else
+							{
+								word.addChar(char)
+							}
+						}
+						else
+						{
+							if (char == "1") { arrangeInSquare(2) }
+							if (char == "2") { arrangeInSquare(4) }
+							if (char == "3") { arrangeInSquare(8) }
+							if (char == "4") { arrangeInSquare(9) }
+							if (char == "5") { arrangeInSquare(14) }
+							if (char == "6") {  arrangeInCube(6)  }
+							if (char == "7") { arrangeInCube(5) }
+							if (char == "8") { arrangeInCube(4) }
+							if (char == "9") { arrangeInCube(3) }
+							if (char == "0") { arrangeInCube(2) }
+
+							if (char == "q") { applyToCubes("resize") }
+							if (char == "w") { applyToCubes("chooseRandomTargetPosition") }
+							if (char == "e") { applyToCubes("shake") }
+							//if (char == "w") { applyToCubes("expand") }
+							
+							if (char == "a") { applyToCubes("rotZ90") }
+							if (char == "s") { applyToCubes("rotX90") }
+							
+							if (char == "z") { applyToCubes("chooseRandomPaletteTargetColor") }
+							if (char == "x") { groupNumber ++; applyToCubes("chooseRandomGroupPaletteTargetColor") }
+							if (char == "c") { groupNumber ++; applyToCubes("zebra")  }
+							
+							//if (char == "p") { cubes_pulse = !cubes_pulse  }
+							if (char == "p") { applyToCubes("pulse")   }
+							if (char == "o") { console.log("outaHere1"); applyToCubes("outaHere")  }
+							if (char == "i") { console.log("inaHere1"); applyToCubes("inaHere")  }
+							//if (char == "v") { applyToCubes("outZ")  }
+						}
+					}
+				});
+
 		        // Camera positions
-		        $(document).bind('keydown', '1', function(){camera.position.set(0,0,1000); camera.rotation.x=camera.rotation.y=camera.rotation.z=0; camera.lookAt(0,0,0);});
+		        //$(document).bind('keydown', '1', function(){camera.position.set(0,0,1000); camera.rotation.x=camera.rotation.y=camera.rotation.z=0; camera.lookAt(0,0,0);});
         
         
 			}
