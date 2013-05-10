@@ -103,6 +103,14 @@ Cube = Proto.clone().newSlots({
 		{
 			this.setTargetScale(4)
 		}
+		else if (this._target.scale.x == 4)
+		{
+			this.setTargetScale(6.5)
+		}
+		else if (this._target.scale.x == 6.5)
+		{
+			this.setTargetScale(15)
+		}
 		else 
 		{
 			this.setTargetScale(.5)
@@ -292,8 +300,6 @@ Cube = Proto.clone().newSlots({
 	{
 		var r = this.distanceFromOrigin()
 		this._offsets.position.z = 50*(1.1 + Math.sin( r/100 + this._timeCount/20 ))
-		//console.log("this._offsets.position.z  = " + this._offsets.position.z )
-		//this._offsets.position.z = 0.01*Math.sin( r/100 + timeCount/20 )
 	},
 	
 	minSize: function()
@@ -315,7 +321,24 @@ Cube = Proto.clone().newSlots({
 	{
 		this._target.rotation.z = 0	
 	},
-	
+
+	rotRand90: function()
+	{
+		var v = Math.floor(Math.random()*3)
+		if (v == 0)
+		{
+			this._target.rotation.x += PI/2
+		}
+		if (v == 1)
+		{
+			this._target.rotation.y += PI/2
+		}
+		if (v == 2)
+		{
+			this._target.rotation.z += PI/2
+		}	
+	},
+		
 	rotX90: function()
 	{
 		this._target.rotation.x += PI/2
