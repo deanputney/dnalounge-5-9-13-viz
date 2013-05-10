@@ -19,27 +19,12 @@
 		<script src="./js/TrackballControls.js"></script>
 		<script src="../../js/jquery.min.js"></script>
 		<script src="../../js/jquery.hotkeys.js"></script>
-
 		<script src="../../fonts/alphabet-bitmap.js"></script>
     
 		<script src="../../three.js/examples/js/shaders/ConvolutionShader.js"></script>
 		<script src="../../three.js/examples/js/shaders/CopyShader.js"></script>
 		<script src="../../three.js/examples/js/shaders/FXAAShader.js"></script>
     
-		<script type="text/javascript" src="../../js/Crux/Arguments.js"></script>    
-		<script type="text/javascript" src="../../js/Crux/Proto.js"></script>     
-		<script type="text/javascript" src="../../js/Crux/Object.js"></script>
-		<script type="text/javascript" src="../../js/Crux/Array.js"></script> 
-		<script type="text/javascript" src="../../js/Crux/Array+Path.js"></script>     
-		<script type="text/javascript" src="../../js/Crux/String+Path.js"></script>     
-		<script type="text/javascript" src="../../js/Crux/String.js"></script>     
-		<script type="text/javascript" src="../../js/Crux/Number.js"></script>     
-		<script type="text/javascript" src="../../js/Crux/Date.js"></script>     
-		<script type="text/javascript" src="../../js/Crux/Delegator.js"></script> 
-		<script type="text/javascript" src="../../js/Crux/Time.js"></script> 
-		<script type="text/javascript" src="Cube.js"></script> 
-		<script type="text/javascript" src="Char.js"></script> 
-
 		<script src="../../three.js/examples/js/postprocessing/EffectComposer.js"></script>
 		<script src="../../three.js/examples/js/postprocessing/MaskPass.js"></script>
 		<script src="../../three.js/examples/js/postprocessing/RenderPass.js"></script>
@@ -49,23 +34,24 @@
 		<script>
 			var container, stats;
 			var camera, controls, scene, projector, renderer;
-			var plane;
+			var objects = [], plane;
 
 			var mouse = new THREE.Vector2(),
-			offset = new THREE.Vector3(), INTERSECTED, SELECTED;
+			offset = new THREE.Vector3(),
+			INTERSECTED, SELECTED;
 
 			init();
 			animate();
 
-			function init() 
-			{
+			function init() {
+
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.z = 1000;
 
-				controls = new THREE.TrackballControls(camera);
+				controls = new THREE.TrackballControls( camera );
 				controls.rotateSpeed = 1.0;
 				controls.zoomSpeed = 1.2;
 				controls.panSpeed = 0.8;
@@ -97,16 +83,118 @@
 
 				scene.add( light );
 				
+				// --- light 2 ------------------------------------------
+				/*
+				var light = new THREE.SpotLight( 0xffffff, .5 );
+				light.position.set( -3000, 3000, 2000 );
+				light.castShadow = true;
+				//light.shadowCameraVisible = true
+
+				light.shadowCameraNear = 200;
+				light.shadowCameraFar = camera.far;
+				light.shadowCameraFov = 50;
+
+				light.shadowBias = -0.00022;
+				light.shadowDarkness = 0.5;
+
+				light.shadowMapWidth = 2048;
+				light.shadowMapHeight = 2048;
+
+				scene.add( light );
+*/
+				// --- ------------------------------------------
+			COLORSETS = {}
+  			COLORSETS.RAINBOWBRITE = new Array('#71c8bf', '#1ba554', '#cad93b', '#fef02f', '#fbb62c', '#f38a2e', '#ee592c', '#ea1d2b', '#b42767', '#65328f', '#52529f', '#20aeda')
+
+				var geometry = new THREE.CubeGeometry( 40, 40, 40 );
+
+				cubes = []
+				var xmax = 10
+				var ymax = 10
+				var i = 0
+				for ( var x = 0; x < xmax; x ++ ) 
+				{
+					for ( var y = 0; y < ymax; y ++ ) 
+					{
+						i = i + 1
+						//var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+						var color = COLORSETS.RAINBOWBRITE[i % COLORSETS.RAINBOWBRITE.length]
+						var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( 
+							{ 
+								color:  color, //0xffffff,
+								wireframe: false 
+							}
+						));
+
+						object.material.ambient = object.material.color;
+
+						// --- current ----------------------------
+
+						var cubeSize = 2.47
+
+						object.current = {}
+
+						object.current.position = {}
+						object.current.position.x = (x- xmax/2)*100;
+						object.current.position.y = (y -ymax/2)*100;
+						object.current.position.z = 0;	
+
+						object.current.scale = {}
+						object.current.scale.x = cubeSize
+						object.current.scale.y = cubeSize 
+						object.current.scale.z = cubeSize
+						
+						object.current.rotation = {}
+						object.current.rotation.x = 0
+						object.current.rotation.y = 0 
+						object.current.rotation.z = 0
+
+						// --- original ----------------------------
+
+						object.original = {}
+						object.original.position = JSON.parse(JSON.stringify(object.current.position))
+						object.original.scale    = JSON.parse(JSON.stringify(object.current.scale))
+						object.original.rotation = JSON.parse(JSON.stringify(object.current.rotation))
+						
+						// --- target ----------------------------
+						
+						object.target = {}
+						object.target.position = JSON.parse(JSON.stringify(object.current.position))
+						object.target.scale = JSON.parse(JSON.stringify(object.current.scale))
+						object.target.rotation = JSON.parse(JSON.stringify(object.current.rotation))
+						
+						// --- offsets ----------------------------
+						
+						object.offsets = {}
+						object.offsets.position = {}
+						object.offsets.scale = {}
+						object.offsets.rotation = {}
+
+						// ----------------------------------------
+						
+						object.castShadow = true;
+						object.receiveShadow = true;
+
+						scene.add( object );
+
+						objects.push( object );
+						cubes.push(object)
+						
+						
+
+					}
+				}
+
 				plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( 
 					{ color: 0x000000, opacity: 0.25, transparent: true, wireframe: true } 
 				) );
 				plane.visible = false;
-				scene.add(plane);
+				scene.add( plane );
 
 				projector = new THREE.Projector();
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
-        		// renderer.setClearColor(0x00ff00,1);
+        // renderer.setClearColor(0x00ff00,1);
 				renderer.sortObjects = false;
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
@@ -144,116 +232,9 @@
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
-				cubes = []
-				var i = 0
-				for ( var x = 0; x < 10; x ++ ) 
-				{				
-					addCube()
-				}
-				arrangeInSquare()
-				arrangeInCube()
-				
 				setupBindings()
+				setupGlobals()
 			}
-			
-			function addCube()
-			{
-				var cube = Cube.clone()
-				cube.setScene(scene)
-				cube.add()
-				
-				cube.chooseRandomTargetPosition()
-				cube.chooseRandomPaletteTargetColor()
-				cubes.push(cube)
-				return cube				
-			}
-			
-			function removeCube()
-			{
-				var cube = cubes.pop()
-				scene.remove(cube.mesh());
-			}
-			
-			function setCubeCount(n)
-			{
-				while (cubes.length > n)
-				{
-					removeCube()
-				}
-				
-				while (cubes.length < n)
-				{
-					addCube()
-				}				
-			}
-
-			function addCubesUntilSquare()
-			{
-				var s = Math.sqrt(cubes.length)
-				while (cubes.length == 0 || Math.floor(s) != s)
-				{
-					addCube()
-					s = Math.sqrt(cubes.length)
-					//console.log("addCubesUntilCube cubes.length = " + cubes.length)
-				}
-			}
-			
-			function addCubesUntilCube()
-			{
-				var s = Math.pow(cubes.length, 1/3)
-				while (cubes.length == 0 || Math.floor(s) != s)
-				{
-					addCube()
-					s = Math.pow(cubes.length, 1/3)
-					//console.log("addCubesUntilCube cubes.length = " + cubes.length)
-				}
-			}
-					
-			function arrangeInSquare(d)
-			{
-				addCubesUntilSquare()
-				var max = Math.sqrt(cubes.length)
-				var d = max*180
-				var i = 0
-				for ( var x = 0; x < max; x ++ ) 
-				{			
-					for ( var y = 0; y < max; y ++ ) 
-					{		
-						var cube = cubes[i]
-						//console.log("cube[" + i +"] = " + cube)
-						cube._target.position.x = d*(x/(max-1) -.5)
-						cube._target.position.y = d*(y/(max-1) -.5)
-						cube._target.position.z = 0
-						i ++						
-					}
-				}								
-			}
-			
-			function arrangeInCube()
-			{
-				setCubeCount(3*3*3)
-				
-				//addCubesUntilCube()
-				
-				var max = Math.pow(cubes.length, 1/3)
-				var d = max*180
-				var i = 0
-				for ( var x = 0; x < max; x ++ ) 
-				{			
-					for ( var y = 0; y < max; y ++ ) 
-					{	
-						for ( var z = 0; z < max; z ++ ) 
-						{			
-							var cube = cubes[i]
-							cube._target.position.x = d*(x/(max-1) -.5)
-							cube._target.position.y = d*(y/(max-1) -.5)
-							cube._target.position.z = d*(z/(max-1) -.5)
-							i ++						
-						}
-					}
-				}								
-			}
-			
 
 			function onWindowResize() 
 			{
@@ -271,6 +252,47 @@
 
 				var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
 				projector.unprojectVector( vector, camera );
+
+				/*
+				var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+
+				if ( SELECTED ) 
+				{
+					var intersects = raycaster.intersectObject( plane );
+					SELECTED.position.copy( intersects[ 0 ].point.sub( offset ) );
+					return;
+				}
+
+				var intersects = raycaster.intersectObjects( objects );
+
+				if ( intersects.length > 0 ) 
+				{
+					if ( INTERSECTED != intersects[ 0 ].object ) 
+					{
+
+						if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+
+						INTERSECTED = intersects[ 0 ].object;
+						INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+
+						plane.position.copy( INTERSECTED.position );
+						plane.lookAt( camera.position );
+
+					}
+
+					container.style.cursor = 'pointer';
+
+				} 
+				else 
+				{
+
+					if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+					INTERSECTED = null;
+					container.style.cursor = 'auto';
+				}
+				*/
+
 			}
 
 			function onDocumentMouseDown( event ) 
@@ -279,6 +301,26 @@
 
 				var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
 				projector.unprojectVector( vector, camera );
+
+				/*
+				var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+				var intersects = raycaster.intersectObjects( objects );
+
+				if ( intersects.length > 0 ) {
+
+					controls.enabled = false;
+
+					SELECTED = intersects[ 0 ].object;
+
+					var intersects = raycaster.intersectObject( plane );
+					offset.copy( intersects[ 0 ].point ).sub( plane.position );
+
+					container.style.cursor = 'move';
+
+				}
+				*/
+
 			}
 
 			function onDocumentMouseUp( event ) 
@@ -297,14 +339,14 @@
 
 			function animate() 
 			{
-				requestAnimationFrame(animate);
-				
+				requestAnimationFrame( animate );
 				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
 				{
 					var object = cubes[i];
 					object.timeStep()
 				}
 								
+				doUpdates()
 				render();
 			}
 
@@ -313,59 +355,56 @@
 				controls.update();
 				renderer.clear();
                 composer.render();
-        		//renderer.render( scene, camera );
+        		// renderer.render( scene, camera );
 			}
-			
-			function cubeWithoutOwner()
-			{
-				for (var i = 0; i < cubes.length; i++)
-				{
-					var cube = cubes[i]
-					if (cube.owner() == null) { return cube }
-				}
-				
-				return addCube()
-			}
-			
-			
-		function addChar(char)
-		{
-			var cubesCopy = shuffleArray(cubes.slice(0));
-			var rows = FONTS.WENDY[char]
-			var objNum = 0
-			
-			for (var y = 0; y < rows.length; y ++)
-			{
-				var row = rows[y]
-				for (var x = 0; x < row.length; x ++)
-				{
-					if (row[x] == 1)
-					{
-						var cube = cubesCopy.pop()
-					
-						cube._target.position.x = (x - row.length/2)*50
-						cube._target.position.y = -(y - rows.length/2)*50
-						cube._target.position.z = -10
-						cube._target.scale.x = 1.2
-						cube._target.scale.y = 1.2
-						cube._target.scale.z = 1
-						//object._material.opacity = 1
-						objNum ++
-					}
-				}
-			}
-		
-			var cube = null;
-			while (cube = cubesCopy.pop())
-			{
-				cube._target.scale.x = 0.1
-				cube._target.scale.y = 0.1
-				cube._target.scale.z = 0.1
-			}
-		}
-	
 
-			/*			
+			function doUpdates()
+			{
+				zeroOffsets()
+				updateSpread()
+				updateSize()
+				updateNames()
+				updateWave()
+				applyOffsets()
+			}
+
+			function zeroOffsets()
+			{				
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				{
+					var object = cubes[i];
+					object.offsets.position.x = 0
+					object.offsets.position.y = 0
+					object.offsets.position.z = 0
+					object.offsets.scale.x = 0
+					object.offsets.scale.y = 0
+					object.offsets.scale.z = 0
+					object.offsets.rotation.x = 0
+					object.offsets.rotation.y = 0
+					object.offsets.rotation.z = 0
+				}
+			}
+			
+			function applyOffsets()
+			{				
+				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
+				{
+					var object = cubes[i];
+					
+					object.position.x = object.current.position.x + object.offsets.position.x
+					object.position.y = object.current.position.y + object.offsets.position.y
+					object.position.z = object.current.position.z + object.offsets.position.z
+					
+					object.scale.x = object.current.scale.x + object.offsets.scale.x
+					object.scale.y = object.current.scale.y + object.offsets.scale.y
+					object.scale.z = object.current.scale.z + object.offsets.scale.z
+					
+					object.rotation.x = object.current.rotation.x + object.offsets.rotation.x
+					object.rotation.y = object.current.rotation.y + object.offsets.rotation.y
+					object.rotation.z = object.current.rotation.z + object.offsets.rotation.z
+				}
+			}
+						
 			function updateWave()
 			{
 				timeCount = timeCount + 1
@@ -411,9 +450,7 @@
 				
 				size.speed *= .9
 			}
-			*/
 
-			/*
 			function setupGlobals()
 			{
 				timeCount = 0
@@ -513,38 +550,36 @@
 						object.target.scale.x = 0.1
 						object.target.scale.y = 0.1
 						object.target.scale.z = 0.1
-					}	
+					}
+					
 				}
+				
+
+
 			}
-			*/
 			
 			function setupBindings()
 			{
-				$(document).bind('keydown', 'b', function(){ addChar("b") });
-
- 		        $(document).bind('keydown', 'a', function(){ arrangeInSquare() });
- 		        $(document).bind('keydown', 's', function(){ arrangeInCube() });
-       
-		        // Cube motion
-		        $(document).bind('keydown', 'o', function(){ spread.speed +=.05 });
-		        $(document).bind('keydown', 'p', function(){ spread.speed -=.05});
-		        $(document).bind('keydown', 'l', function(){size.speed +=.05});
-		        $(document).bind('keydown', 'k', function(){size.speed -=.05});
         
-		        // Names
-		        $(document).bind('keydown', 'q', function(){selectName(-1)});
-		        $(document).bind('keydown', 'w', function(){selectName(0)});
-		        $(document).bind('keydown', 'e', function(){selectName(1)});
-		        $(document).bind('keydown', 'r', function(){selectName(2)});
+        // Cube motion
+        $(document).bind('keydown', 'o', function(){spread.speed +=.05});
+        $(document).bind('keydown', 'p', function(){spread.speed -=.05});
+        $(document).bind('keydown', 'l', function(){size.speed +=.05});
+        $(document).bind('keydown', 'k', function(){size.speed -=.05});
         
-		        // Camera positions
-		        $(document).bind('keydown', '1', function(){camera.position.set(0,0,1000); camera.rotation.x=camera.rotation.y=camera.rotation.z=0; camera.lookAt(0,0,0);});
+        // Names
+        $(document).bind('keydown', 'q', function(){selectName(-1)});
+        $(document).bind('keydown', 'w', function(){selectName(0)});
+        $(document).bind('keydown', 'e', function(){selectName(1)});
+        $(document).bind('keydown', 'r', function(){selectName(2)});
+        
+        // Camera positions
+        $(document).bind('keydown', '1', function(){camera.position.set(0,0,1000); camera.rotation.x=camera.rotation.y=camera.rotation.z=0; camera.lookAt(0,0,0);});
         
         
 			}
 			
-			function shuffleArray(o)
-			{ 
+			function shuffleArray(o){ //v1.0
 			    for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
 			    return o;
 			};
