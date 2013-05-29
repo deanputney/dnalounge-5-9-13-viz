@@ -109,15 +109,12 @@ Cube = Proto.clone().newSlots({
 		}
 		else if (this._target.scale.x == 6.5)
 		{
-			this.setTargetScale(15)
+			this.setTargetScale(10)
 		}
 		else 
 		{
 			this.setTargetScale(.5)
-		}
-		
-		
-		
+		}		
 	},
 		
 	expand: function()

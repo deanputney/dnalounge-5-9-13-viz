@@ -38,7 +38,9 @@
 		<script type="text/javascript" src="../../js/Crux/Delegator.js"></script> 
 		<script type="text/javascript" src="../../js/Crux/Time.js"></script> 
 		<script type="text/javascript" src="Cube.js"></script> 
+		<script type="text/javascript" src="Word.js"></script> 
 		<script type="text/javascript" src="Char.js"></script> 
+		<script type="text/javascript" src="Key.js"></script> 
 
 		<script src="../../three.js/examples/js/postprocessing/EffectComposer.js"></script>
 		<script src="../../three.js/examples/js/postprocessing/MaskPass.js"></script>
@@ -60,6 +62,13 @@
 			
 			function init() 
 			{
+				keyActions = {}
+				actionStack = []
+				
+				pulseT1 = null
+				pulsePeriod = null
+				pulseNumber = 0
+			
 				timeStep = 0
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
@@ -168,6 +177,8 @@
 				
 				cube.chooseRandomTargetPosition()
 				cube.chooseRandomPaletteTargetColor()
+				cube.setScale(0)
+				cube.setTargetScale(1)
 				cubes.push(cube)
 				return cube				
 			}
@@ -189,7 +200,7 @@
 				while (cubes.length < n)
 				{
 					cube = addCube()
-					if (scale) { cube.setScale(scale) }
+					if (scale) { cube.setTargetScale(scale) }
 				}				
 			}
 
@@ -215,7 +226,9 @@
 					
 			function arrangeInSquare(size)
 			{
-				var scale = cubes[0].targetScale()
+				var scale = 1 
+				if (cubes.length) { cubes[0].targetScale() }
+				setCubeCount(0, 0)
 				setCubeCount(size*size, scale)
 				//addCubesUntilSquare()
 				if (max == null)
@@ -245,7 +258,9 @@
 				//var sizes = [2*2*2, 3*3*3, 4*4*4, 5*5*5]
 				//size = sizes[cubeSizeIndex % sizes.length]
 				//cubeSizeIndex ++
-				var scale = cubes[0].targetScale()
+				var scale = 1
+				if (cubes.length) { scale = cubes[0].targetScale() }
+				setCubeCount(0, 0)
 				setCubeCount(size*size*size, scale)
 				
 				//addCubesUntilCube()
@@ -317,7 +332,23 @@
 				
 				timeStep ++
 				animateCamera()	
-				render();
+				render()
+				
+				if (pulsePeriod != null)
+				{
+					//console.log("next: " + (pulseT1 + pulsePeriod*(pulseNumber + 1)) + " t: " + new Date().getTime() )
+					if (pulseT1 + pulsePeriod*(pulseNumber + 1) < new Date().getTime())
+					{
+						applyToCubes("pulse")   
+						pulseNumber ++
+						if (actionStack.length > 2)
+						{
+						actionStack[actionStack.length -1]()
+						actionStack[actionStack.length -2]()
+						}
+						//console.log("pulse!")
+					}
+				}
 			}
 
 			function render() 
@@ -349,7 +380,6 @@
 				}
 			}
 			
-	
 			function animateCamera()
 			{
 				camera.position.set(1000*Math.sin(timeStep/100), 0, 1000*Math.cos(timeStep/100));
@@ -357,54 +387,7 @@
 				camera.lookAt(new THREE.Vector3(0,0,0));
 			}
 
-			/*			
-			function updateWave()
-			{
-				timeCount = timeCount + 1
-				
-				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
-				{
-					var object = cubes[ i ];
-					
-					var dx = object.position.x
-					var dz = object.position.y
-					var r = Math.sqrt(dx*dx + dz*dz)
-					object.current.position.z = 50*(1.1 + Math.sin( r/100 + timeCount/20 ))
-					//object.offsets.position.z = 0.01*Math.sin( r/100 + timeCount/20 )
-				}
-			}
-
-			function updateSpread()
-			{					
-				spread.value += spread.speed
-				
-				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
-				{
-					var object = cubes[ i ];
-					object.offsets.position.x = object.current.position.x * spread.value
-					object.offsets.position.y = object.current.position.y * spread.value
-				}
-				
-				spread.speed *= .9
-			}
 			
-			function updateSize()
-			{					
-				size.value += size.speed
-				
-				if (size.value < .1) { size.value = .1; }
-				
-				for ( var i = 0, l = cubes.length; i < l; i ++ ) 
-				{
-					var object = cubes[ i ];
-					object.offsets.scale.x = object.current.scale.x * size.value
-					object.offsets.scale.y = object.current.scale.y * size.value
-				}
-				
-				size.speed *= .9
-			}
-			*/
-
 			word = Word.clone()
 			isTyping = false
 			
@@ -417,15 +400,49 @@
 				}				
 			}
 			
+			function pushAction(func)
+			{
+				//keyActions[key] = 
+				actionStack.push(func)
+				func()
+			}
+			
+			function popKey(char)
+			{
+				//console.log("shiftKey = " + Keyboard.shiftKey)
+				
+				if (Keyboard.shiftKey)
+				{
+					keyActions[char] = actionStack; 
+					actionStack = []
+					//console.log("keyActions[char].length = " + keyActions[char].length)
+				}
+			
+				if (keyActions[char])
+				{
+					for (var i = 0; i < keyActions[char].length; i++)
+					{
+						func = keyActions[char][i]
+						//console.log("perform actions " + func)
+						func()
+					}
+				}				
+			}
+			
+			Keyboard = {}
 			
 			function setupBindings()
 			{
 				$(document).bind('keydown', function(e) { 
+					Keyboard.shiftKey = e.shiftKey
+					Keyboard.altKey   = e.altKey
+					Keyboard.ctrlKey  = e.ctrlKey
+					
 					var retChar = 13
 					var escChar = 27
 					var sqChar = 192
 					
-					console.log("e.keyCode = " + e.keyCode)
+					//console.log("e.keyCode = " + e.keyCode)
 					var char = String.fromCharCode(e.keyCode).toLowerCase()
 
 					if (e.keyCode  == sqChar)
@@ -453,34 +470,110 @@
 						}
 						else
 						{
-							if (char == "1") { arrangeInSquare(2) }
-							if (char == "2") { arrangeInSquare(4) }
-							if (char == "3") { arrangeInSquare(8) }
-							if (char == "4") { arrangeInSquare(9) }
-							if (char == "5") { arrangeInSquare(14) }
-							if (char == "6") {  arrangeInCube(6)  }
-							if (char == "7") { arrangeInCube(5) }
-							if (char == "8") { arrangeInCube(4) }
-							if (char == "9") { arrangeInCube(3) }
-							if (char == "0") { arrangeInCube(2) }
+							if (char == "1") { pushAction(function () { arrangeInSquare(0) }) }
+							if (char == "2") { pushAction(function () { arrangeInSquare(4) }) }
+							if (char == "3") { pushAction(function () { arrangeInSquare(8) }) }
+							if (char == "4") { pushAction(function () { arrangeInSquare(9) }) }
+							if (char == "5") { pushAction(function () { arrangeInSquare(14) }) }
+							if (char == "6") { pushAction(function () { arrangeInCube(6) }) }
+							if (char == "7") { pushAction(function () { arrangeInCube(5) }) }
+							if (char == "8") { pushAction(function () { arrangeInCube(4) }) }
+							if (char == "9") { pushAction(function () { arrangeInCube(3) }) }
+							if (char == "0") { pushAction(function () { arrangeInCube(2) }) }
+							
+							if (char == "m") { popKey(char) }
 
-							if (char == "q") { applyToCubes("resize") }
-							if (char == "w") { applyToCubes("chooseRandomTargetPosition") }
-							if (char == "e") { applyToCubes("shake") }
-							//if (char == "w") { applyToCubes("expand") }
+							if (char == "q") { pushAction(function () { applyToCubes("resize") }) }
+							if (char == "w") { pushAction(function () { applyToCubes("chooseRandomTargetPosition") }) }
+							if (char == "e") { pushAction(function () { applyToCubes("shake") }) }
+							//if (char == "w") { pushAction(function () { applyToCubes("expand") }
 							
-							if (char == "a") { applyToCubes("rotZ90") }
-							if (char == "s") { applyToCubes("rotX90") }
-							if (char == "d") { applyToCubes("rotRand90") }
+							if (char == "a") { pushAction(function () { applyToCubes("rotZ90") }) }
+							if (char == "s") { pushAction(function () { applyToCubes("rotX90") }) }
+							if (char == "d") { pushAction(function () { applyToCubes("rotRand90") }) }
 							
-							if (char == "z") { applyToCubes("chooseRandomPaletteTargetColor") }
-							if (char == "x") { groupNumber ++; applyToCubes("chooseRandomGroupPaletteTargetColor") }
-							if (char == "c") { groupNumber ++; applyToCubes("zebra")  }
+							if (char == "z") { 
+								pushAction(function () { 
+									applyToCubes("chooseRandomPaletteTargetColor") 
+								}) 
+							}
+							
+							if (char == "x") { 
+								pushAction(function () { 
+									groupNumber ++; 
+									applyToCubes("chooseRandomGroupPaletteTargetColor") 
+								})
+							}
+							
+							if (char == "c") { 
+								pushAction(function () { 
+									groupNumber ++; 
+									applyToCubes("zebra") 
+								})  
+							}
+							
+							if (char == "v") 
+							{ 
+								pushAction(function () { 
+									groupNumber ++; 
+									applyToCubes("zebra"); 
+									applyToCubes("chooseRandomTargetPosition") 
+								}) 
+							}
+							
+							if (char == "b") 
+							{ 
+								pushAction(function () { 
+									groupNumber ++; 
+									applyToCubes("chooseRandomGroupPaletteTargetColor"); 
+									applyToCubes("chooseRandomTargetPosition")  
+								})
+							}
+							
+							if (char == "n") 
+							{ 
+								groupNumber ++; 
+								applyToCubes("resize"); 
+								applyToCubes("chooseRandomGroupPaletteTargetColor"); 
+								applyToCubes("chooseRandomTargetPosition")  
+							}
+
+							if (char == "l") 
+							{
+								pulseT1 = null
+								pulsePeriod = null
+							}
 							
 							//if (char == "p") { cubes_pulse = !cubes_pulse  }
-							if (char == "p") { applyToCubes("pulse")   }
-							if (char == "o") { console.log("outaHere1"); applyToCubes("outaHere")  }
-							if (char == "i") { console.log("inaHere1"); applyToCubes("inaHere")  }
+							if (char == "p") 
+							{ 
+								if (pulseT1 == null)
+								{
+									pulseT1 = new Date().getTime()
+									//console.log("pulseT1 = " + pulseT1)
+								}
+								else if (pulsePeriod == null)
+								{
+									dt = new Date().getTime() - pulseT1
+									pulsePeriod = dt
+									//console.log("pulsePeriod = " + pulsePeriod)
+								}
+								else // update sync
+								{
+									t = new Date().getTime()
+									dt = t - pulseT1
+									pulsePeriod = dt/(Math.floor(1000*dt/pulsePeriod)/1000)
+									pulseT1 = t
+									pulseNumber = 0
+									//pulseT1 = null
+									//pulsePeriod = null
+								}
+								
+								applyToCubes("pulse")   
+							}
+							
+							if (char == "o") { pushAction(function () {  applyToCubes("outaHere") }) }
+							if (char == "i") { pushAction(function () {  applyToCubes("inaHere")  }) }
 							//if (char == "v") { applyToCubes("outZ")  }
 						}
 					}
