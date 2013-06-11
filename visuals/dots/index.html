@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - geometries</title>
+		<title>dots</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -15,9 +15,18 @@
 	</head>
 	<body>
 
-		<script src="../../three.js/build/three.min.js"></script>
-
 		<script src="../../js/jquery.min.js"></script>
+
+		<script src="../../three.js/build/three.min.js"></script>
+		
+		<script src="../../three.js/examples/js/shaders/BleachBypassShader.js"></script>
+		<script src="../../three.js/examples/js/shaders/ConvolutionShader.js"></script>
+		<script src="../../three.js/examples/js/shaders/CopyShader.js"></script>
+		
+		<script src="../../three.js/examples/js/postprocessing/EffectComposer.js"></script>
+		<script src="../../three.js/examples/js/postprocessing/RenderPass.js"></script>
+		<script src="../../three.js/examples/js/postprocessing/MaskPass.js"></script>
+		<script src="../../three.js/examples/js/postprocessing/ShaderPass.js"></script>
 
 		<script>
 		
@@ -29,10 +38,13 @@
 			var container;
 
 			var camera, scene, renderer;
-
-			init();
-			animate();
-
+			
+			$(document).ready(function()
+			{
+				init();
+				animate();
+			})
+			
 			function init() 
 			{
 				
@@ -62,12 +74,36 @@
 				window.addEventListener( 'resize', onWindowResize, false );
 				setupBindings()
 				setupGrid()
+				setupBlur()
+
 			}
+			
+			function setupBlur()
+			{
+				return
+				console.log("THREE.EffectComposer = " + THREE.EffectComposer)
+				composer = new THREE.EffectComposer( renderer );
+				composer.addPass( new THREE.RenderPass( scene, camera ) );
+			}
+			
+			
+			function prepareBlur()
+			{
+				return
+				hblur = new THREE.ShaderPass( THREE.HorizontalBlurShader );
+				composer.addPass( hblur );
+
+				vblur = new THREE.ShaderPass( THREE.VerticalBlurShader );
+				// set this shader pass to render to screen so we can see the effects
+				vblur.renderToScreen = true;
+				composer.addPass( vblur );
+			}
+			
 			
 			function setupGrid()
 			{
 				gridRows = []
-				var max = 11
+				var max = 17
 				for (var x = 0; x < max; x++)
 				{
 					for (var y = 0; y < max; y++)
@@ -124,30 +160,32 @@
 
 			function render() 
 			{
-				var timer = Date.now() * 0.001;
-
+				var timer = Date.now() *.005 //* 0.001;
+				//camera.rotation.z += .1
 				//camera.position.y = Math.cos( timer ) * 800;
 				//camera.position.z = Math.sin( timer ) * 800;
-				camera.rotation.z += 1
+				camera.rotation.x += 10
 				
 				camera.lookAt( { x:00, y:0, z:0 } );
 				//var objectsToRemove = []
 				
-				for ( var i = 0; i < scene.children.length; i ++ ) 
+				for ( var i = 0; i < scene.children.length; i ++) 
 				{
-					var object = scene.children[ i ];
+					var object = scene.children[i];
 					var x = object.position.x
 					var y = object.position.y
 					//object.rotation.y += .01
 					
-					var b = x*y /100000
-					var a = Math.sqrt((x*x) + (y*y))/5 + b
+					//var b = x*y /100000
+					var a = Math.sqrt((x*x) + (y*y) + Math.sin(Math.sqrt(timer))*10000)/5
 					object.scale.x = Math.sin(timer + a)*.4 + .4
 					object.scale.y = Math.sin(timer + a)*.4 + .4
 					
-					object.position.z = Math.sin(timer + a) *100
+					object.position.z = Math.sin(timer + a) *100 
+					//object.position.x -= Math.cos(timer + a*1.1)
+					//object.position.y += Math.cos(object.position.x/100.1) //+ Math.sin(object.position.y/100)
 					
-					object.rotation.z = Math.sin(timer + a) + object.position.z/100 
+					//object.rotation.z = Math.sin(timer + a) + object.position.z/100 
 				//	object.rotation.z = object.position.z/100
 					//object.scale.x *= object.scale.x
 					//object.scale.y *= object.scale.y
@@ -158,6 +196,7 @@
 					}
 					*/
 				}
+				prepareBlur()
 				renderer.render( scene, camera );
 
 				/*
@@ -168,7 +207,7 @@
 				}
 				*/
 			}
-			
+
 			function setupBindings()
 			{
 				$(document).bind('keydown', function(e) { 
@@ -183,11 +222,53 @@
 					
 					var char = String.fromCharCode(e.keyCode).toLowerCase()
 					//if (char == "1") { addObject(e.keyCode) }
-				//	addObject(e.keyCode)
+					//	addObject(e.keyCode)
 				})
+				readImage()
+			}
+			
+			function readImage()
+			{
+
+				var img = new Image();
+				img.src = 'images/lips.jpg';
+				
+				canvas = document.createElement('canvas');
+				canvas.id = 'canvas';
+				canvas.width = img.width;
+				canvas.height = img.height;
+				ccontext = null;
+    			$('body').prepend(canvas);
+
+				img.onload = function() {
+					context.drawImage(img, 0, 0, canvas.height, canvas.width);
+					var data = context.getImageData(0, 0, 100, 100);
+					console.log("data.length = " + data.length)
+				}
+/*
+				var data   = context.getImageData(0, 0, canvas.height, canvas.width);
+				var count  = 0;
+				var tmr    = null;
+				var length = data.length; 
+				(pix = function() { 
+				    var r = data[count + 0];
+				    var g = data[count + 1];
+				    var b = data[count + 2];
+				    var a = data[count + 3];
+				    var rgba = 'rgba('  + r + ' ,' + g + ' ,' + b +   ' ,' + a + ')'; 
+				    console.log(rgba); 
+				    if((count += 4) >= length) { 
+				        clearTimeout(tmr);
+				        return;
+				    }
+				    tmr = setTimeout(pix, 1000/30); //at 30 fps
+				})();
+				*/
 			}
 			
 		</script>
+
+    <canvas id="myCanvas" width="100" height="100"></canvas>
 
 	</body>
 </html>
