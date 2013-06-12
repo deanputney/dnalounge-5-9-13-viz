@@ -160,13 +160,14 @@
 
 			function render() 
 			{
-				var timer = Date.now() *.005 //* 0.001;
-				//camera.rotation.z += .1
-				//camera.position.y = Math.cos( timer ) * 800;
-				//camera.position.z = Math.sin( timer ) * 800;
-				camera.rotation.x += 10
+				var timer = Date.now() *.009 //* 0.001;
+				camera.rotation.z = Math.sin(timer % .01)
+				camera.position.z += Math.sin(timer)*100
+				//camera.position.y = Math.cos( timer/10 ) * 800;
+				//camera.position.z = Math.sin( timer/10 ) * 800;
+				//camera.rotation.x += .01
 				
-				camera.lookAt( { x:00, y:0, z:0 } );
+//				camera.lookAt( { x:00, y:0, z:0 } );
 				//var objectsToRemove = []
 				
 				for ( var i = 0; i < scene.children.length; i ++) 
@@ -177,11 +178,12 @@
 					//object.rotation.y += .01
 					
 					//var b = x*y /100000
-					var a = Math.sqrt((x*x) + (y*y) + Math.sin(Math.sqrt(timer))*10000)/5
+					//var a = Math.sqrt((x*x) + (y*y) + Math.sin(Math.sqrt(timer))*10000)/5
+					var a = Math.sqrt((x*x) + (y*y) + 1)/100
 					object.scale.x = Math.sin(timer + a)*.4 + .4
 					object.scale.y = Math.sin(timer + a)*.4 + .4
 					
-					object.position.z = Math.sin(timer + a) *100 
+					object.position.z = -300 *(1 - Math.sin(timer + a) *.5)
 					//object.position.x -= Math.cos(timer + a*1.1)
 					//object.position.y += Math.cos(object.position.x/100.1) //+ Math.sin(object.position.y/100)
 					
