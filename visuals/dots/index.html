@@ -103,14 +103,14 @@
 			function setupGrid()
 			{
 				gridRows = []
-				var max = 17
+				var max = 27
 				for (var x = 0; x < max; x++)
 				{
 					for (var y = 0; y < max; y++)
 					{
 						var obj = addObject()
-						obj.position.x = (x - (max-1)/2) *100 
-						obj.position.y = (y - (max-1)/2) *100
+						obj.position.x = (x - (max-1)/2) *100 + (y % 2)*50
+						obj.position.y = (y - (max-1)/2) *100 
 						obj.position.z = 0
 					} 
 									
@@ -161,13 +161,14 @@
 			function render() 
 			{
 				var timer = Date.now() *.009 //* 0.001;
-				camera.rotation.z = Math.sin(timer % .01)
-				camera.position.z += Math.sin(timer)*100
+				
+				//camera.rotation.y += .01
+				
+				//camera.position.z += Math.sin(timer)*100
 				//camera.position.y = Math.cos( timer/10 ) * 800;
 				//camera.position.z = Math.sin( timer/10 ) * 800;
 				//camera.rotation.x += .01
 				
-//				camera.lookAt( { x:00, y:0, z:0 } );
 				//var objectsToRemove = []
 				
 				for ( var i = 0; i < scene.children.length; i ++) 
@@ -176,16 +177,20 @@
 					var x = object.position.x
 					var y = object.position.y
 					//object.rotation.y += .01
-					
+
 					//var b = x*y /100000
 					//var a = Math.sqrt((x*x) + (y*y) + Math.sin(Math.sqrt(timer))*10000)/5
 					var a = Math.sqrt((x*x) + (y*y) + 1)/100
 					object.scale.x = Math.sin(timer + a)*.4 + .4
 					object.scale.y = Math.sin(timer + a)*.4 + .4
 					
-					object.position.z = -300 *(1 - Math.sin(timer + a) *.5)
+					object.position.z = -300 *(1 - Math.cos(timer + a) *.5 + Math.sin(timer*.2 + a))
+					//object.position.z = -300 *(1 - Math.cos(timer + a) *.5 + Math.sin(timer + a)*.25)
 					//object.position.x -= Math.cos(timer + a*1.1)
-					//object.position.y += Math.cos(object.position.x/100.1) //+ Math.sin(object.position.y/100)
+					//object.position.y -= Math.cos(timer + a*1.1)
+					//var xx = object.position.x
+					//object.position.x += Math.cos(object.position.y/100)*.7 //+ Math.sin(object.position.y/100)
+					//object.position.y += Math.sin(object.scale.x/100)*.7 //+ Math.sin(object.position.y/100)
 					
 					//object.rotation.z = Math.sin(timer + a) + object.position.z/100 
 				//	object.rotation.z = object.position.z/100
@@ -226,7 +231,7 @@
 					//if (char == "1") { addObject(e.keyCode) }
 					//	addObject(e.keyCode)
 				})
-				readImage()
+				//readImage()
 			}
 			
 			function readImage()
@@ -270,7 +275,6 @@
 			
 		</script>
 
-    <canvas id="myCanvas" width="100" height="100"></canvas>
 
 	</body>
 </html>
